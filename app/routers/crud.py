@@ -4,7 +4,11 @@ from uuid import UUID
 from fastapi import APIRouter, Depends
 from fastapi.params import Query
 
-from db.crud.car import create_car_object, get_car_object_by_numberplate, delete_car_object_by_id
+from db.crud.car import (
+    create_car_object,
+    get_car_object_by_numberplate,
+    delete_car_object_by_id,
+)
 from db.models.car import CarCreateModel, CarDataModel
 from db.session import get_db_session
 
