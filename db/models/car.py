@@ -15,6 +15,7 @@ class BlockCreateModel(BaseModel):
 
 class ControllerCreateModel(BaseModel):
     controller_name: str
+    data: bytes
 
 
 class CarDataModel(BaseModel):
@@ -25,10 +26,10 @@ class CarDataModel(BaseModel):
 
 class BlockDataModel(BaseModel):
     block_name: str
-    data: bytes
     id: UUID
 
 
 class ControllerDataModel(BaseModel):
     controller_name: str
+    data: bytes
     id: UUID
