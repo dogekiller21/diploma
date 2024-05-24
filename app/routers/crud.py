@@ -11,10 +11,20 @@ from db.crud.car import (
     delete_car_object_by_id,
 )
 from db.crud.controller import create_controller_object, get_controller_block_data
-from db.crud.linking import create_controller_link, get_block_linked_controllers, create_car_link, \
-    get_car_linked_controllers
-from db.models.car import CarCreateModel, CarDataModel, BlockCreateModel, BlockDataModel, ControllerCreateModel, \
-    ControllerDataModel
+from db.crud.linking import (
+    create_controller_link,
+    get_block_linked_controllers,
+    create_car_link,
+    get_car_linked_controllers,
+)
+from db.models.car import (
+    CarCreateModel,
+    CarDataModel,
+    BlockCreateModel,
+    BlockDataModel,
+    ControllerCreateModel,
+    ControllerDataModel,
+)
 from db.session import get_db_session
 
 router = APIRouter(prefix="/crud")
@@ -52,13 +62,13 @@ async def create_controller(
 async def link_controller(
     controller_id: str, block_id: str, session=Depends(get_db_session)
 ) -> None:
-    return await create_controller_link(controller_id=controller_id,block_id=block_id, session=session)
+    return await create_controller_link(
+        controller_id=controller_id, block_id=block_id, session=session
+    )
 
 
 @router.post("/link_car")
-async def link_car(
-    car_id: str, block_id: str, session=Depends(get_db_session)
-) -> None:
+async def link_car(car_id: str, block_id: str, session=Depends(get_db_session)) -> None:
     return await create_car_link(car_id=car_id, block_id=block_id, session=session)
 
 

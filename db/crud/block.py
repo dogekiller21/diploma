@@ -17,4 +17,3 @@ async def create_block_object(
     record_data = record.data()
     record_data.update(data.dict())
     return BlockDataModel(**record_data)
-

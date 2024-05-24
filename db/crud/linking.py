@@ -10,22 +10,20 @@ async def create_controller_link(
     await make_request(
         session=session,
         query="MATCH (cc:Controller) WHERE cc.id = $controller_id "
-              "MATCH (bb:Block) WHERE bb.id = $block_id CREATE "
-              "(cc)-[:LINKED]->(bb)",
+        "MATCH (bb:Block) WHERE bb.id = $block_id CREATE "
+        "(cc)-[:LINKED]->(bb)",
         controller_id=controller_id,
         block_id=block_id,
     )
     return
 
 
-async def create_car_link(
-    car_id: str, block_id: str, session: AsyncSession
-) -> None:
+async def create_car_link(car_id: str, block_id: str, session: AsyncSession) -> None:
     await make_request(
         session=session,
         query="MATCH (cc:Car) WHERE cc.id = $car_id "
-              "MATCH (bb:Block) WHERE bb.id = $block_id CREATE "
-              "(cc)-[:LINKED]->(bb)",
+        "MATCH (bb:Block) WHERE bb.id = $block_id CREATE "
+        "(cc)-[:LINKED]->(bb)",
         car_id=car_id,
         block_id=block_id,
     )
@@ -43,10 +41,7 @@ async def get_block_linked_controllers(
     data = await result.data()
     if not data:
         return []
-    return [
-        ControllerDataModel(**item.get("cc"))
-        for item in data
-    ]
+    return [ControllerDataModel(**item.get("cc")) for item in data]
 
 
 async def get_car_linked_controllers(
@@ -60,7 +55,4 @@ async def get_car_linked_controllers(
     data = await result.data()
     if not data:
         return []
-    return [
-        ControllerDataModel(**item.get("controllers"))
-        for item in data
-    ]
+    return [ControllerDataModel(**item.get("controllers")) for item in data]

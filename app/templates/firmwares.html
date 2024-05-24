@@ -1,0 +1,137 @@
+{% extends "base.html" %}
+
+{% block head %}
+<link href="https://cdn.datatables.net/1.13.4/css/dataTables.bootstrap5.min.css" rel="stylesheet">
+{% endblock %}
+
+{% block styles %}
+<style>
+    .highlight {
+        animation: highlight-animation 1s forwards; !important;
+    }
+
+    @keyframes highlight-animation {
+        from {
+            background-color: #00ff41;
+        }
+        to {
+            background-color: transparent;
+        }
+    }
+</style>
+
+{% endblock %}
+
+{% block content %}
+<h1 class="mt-4">Прошивочки</h1>
+
+<form method="get" action="{{ url_for('firmwares_page') }}" class="mb-4">
+    <div class="row">
+        <div class="col-md-5">
+            <input type="text" class="form-control" name="car" placeholder="Авто" value="{{ request.query_params.get('car', '') }}">
+        </div>
+        <div class="col-md-5">
+            <input type="text" class="form-control" name="block" placeholder="Блок" value="{{ request.query_params.get('block', '') }}">
+        </div>
+        <div class="col-md-2">
+            <button type="submit" class="btn btn-primary">Искать</button>
+        </div>
+    </div>
+</form>
+
+<button type="button" class="btn btn-success mb-4" data-bs-toggle="modal" data-bs-target="#addFirmwareModal">
+    Добавить прошивку
+</button>
+
+<table id="firmwareTable" class="table table-striped">
+    <thead>
+        <tr>
+            <th scope="col">ID</th>
+            <th scope="col">Авто</th>
+            <th scope="col">Блок</th>
+            <th scope="col">Версия прошивки</th>
+            <th scope="col">Дата выпуска</th>
+            <th scope="col">Скачать</th>
+        </tr>
+    </thead>
+    <tbody>
+        {% for firmware in firmwares %}
+        <tr>
+            <td>{{ firmware.id }}</td>
+            <td>{{ firmware.car }}</td>
+            <td>{{ firmware.block }}</td>
+            <td>{{ firmware.version }}</td>
+            <td>{{ firmware.release_date }}</td>
+            <td>
+                <a href="{{ url_for('static', path='firmwares/' + firmware.file) }}" class="btn btn-primary btn-sm">Скачать</a>
+            </td>
+        </tr>
+        {% endfor %}
+    </tbody>
+</table>
+
+<div class="modal fade" id="addFirmwareModal" tabindex="-1" aria-labelledby="addFirmwareModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="addFirmwareModalLabel">Добавление прошивки</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <form id="addFirmwareForm" method="post" action="{{ url_for('add_firmware') }}" enctype="multipart/form-data">
+                    <div class="mb-3">
+                        <label for="carInput" class="form-label">Авто</label>
+                        <input type="text" class="form-control" id="carInput" name="car" value="{{ request.query_params.get('car', '') }}">
+                    </div>
+                    <div class="mb-3">
+                        <label for="blockInput" class="form-label">Блок</label>
+                        <input type="text" class="form-control" id="blockInput" name="block" value="{{ request.query_params.get('block', '') }}">
+                    </div>
+                    <div class="mb-3">
+                        <label for="versionInput" class="form-label">Версия</label>
+                        <input type="text" class="form-control" id="versionInput" name="version">
+                    </div>
+                    <div class="mb-3">
+                        <label for="releaseDateInput" class="form-label">Дата выпуска</label>
+                        <input type="date" class="form-control" id="releaseDateInput" name="release_date">
+                    </div>
+                    <div class="mb-3">
+                        <label for="fileInput" class="form-label">Файл</label>
+                        <input type="file" class="form-control" id="fileInput" name="file">
+                    </div>
+                    {% for param_key in request.query_params.keys() %}
+                        <input type="hidden" name="{{ param_key }}_query" value="{{ request.query_params.get(param_key, '') }}">
+                    {% endfor %}
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Закрыть</button>
+                <button type="submit" class="btn btn-primary" form="addFirmwareForm">Добавить</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+{% endblock %}
+
+{% block scripts %}
+<script src="https://cdn.datatables.net/1.13.4/js/jquery.dataTables.min.js"></script>
+<script src="https://cdn.datatables.net/1.13.4/js/dataTables.bootstrap5.min.js"></script>
+<script>
+    $(document).ready(function() {
+        $('#firmwareTable').DataTable({
+            columnDefs: [
+                { orderable: true, targets: [0, 1, 2, 3, 4] }
+            ],
+            "order": [],
+            language: {
+                "paginate": {
+                    "previous": "<i class='fas fa-angle-left'></i>",
+                    "next": "<i class='fas fa-angle-right'></i>"
+                }
+            }
+        });
+    });
+
+</script>
+{% endblock %}

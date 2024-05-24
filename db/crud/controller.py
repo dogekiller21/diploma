@@ -11,7 +11,7 @@ async def create_controller_object(
         session=session,
         query="CREATE (cc:Controller {id: randomUUID(), controller_name: $controller_name, data: $data}) RETURN cc.id AS id",
         controller_name=data.controller_name,
-        data=data.data
+        data=data.data,
     )
     record = await result.single()
     record_data = record.data()
@@ -32,4 +32,3 @@ async def get_controller_block_data(
     if not data:
         return None
     return [block["blocks"]["data"] for block in data]
-
