@@ -1,11 +1,11 @@
 {% extends "base.html" %}
 
 {% block content %}
-<div class="jumbotron">
-    <h1 class="display-4">Добро пожаловать!</h1>
-    <p class="lead">Ваш единый центр поиска прошивки для ваших встраиваемых устройств.</p>
-    <hr class="my-4">
-    <p>Начните поиск нужной прошивочки.</p>
-    <a class="btn btn-primary btn-lg" href="{{ url_for('firmwares_page') }}" role="button">Искать прошивочки</a>
-</div>
+    <div class="jumbotron">
+        <h1 class="display-4">Добро пожаловать!</h1>
+        <p class="lead">Ваш единый центр поиска прошивки для ваших встраиваемых устройств.</p>
+        <hr class="my-4">
+        <p>Начните поиск нужной прошивочки.</p>
+        <a class="btn btn-primary btn-lg" href="{{ url_for('firmwares_page') }}" role="button">Искать прошивочки</a>
+    </div>
 {% endblock %}
