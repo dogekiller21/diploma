@@ -101,7 +101,7 @@ async def add_firmware(
     release_date: date = Form(...),
     file: UploadFile = File(...),
     car_query: Optional[str] = Form(None),
-    block_query: Optional[str] = Form(None)
+    block_query: Optional[str] = Form(None),
 ):
     new_id = len(firmwares_db) + 1
 
@@ -120,9 +120,9 @@ async def add_firmware(
     firmwares_db.append(new_firmware)
     query_params = {}
     if car_query:
-        query_params['car'] = car_query
+        query_params["car"] = car_query
     if block_query:
-        query_params['block'] = block_query
+        query_params["block"] = block_query
     query_string = urllib.parse.urlencode(query_params)
     return RedirectResponse(url=f"/firmwares?{query_string}", status_code=303)
 

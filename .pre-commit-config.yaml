@@ -1,0 +1,15 @@
+repos:
+  - repo: https://github.com/psf/black
+    rev: 24.3.0
+    hooks:
+      - id: black
+        language_version: python3.11
+
+  - repo: local
+    hooks:
+      - id: djhtml
+        name: djhtml
+        entry: djhtml app/templates
+        language: system
+        pass_filenames: false
+        always_run: true
