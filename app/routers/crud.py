@@ -4,20 +4,20 @@ from uuid import UUID
 from fastapi import APIRouter, Depends
 from fastapi.params import Query
 
-from db.crud.block import create_block_object
-from db.crud.car import (
+from app.db.crud.block import create_block_object
+from app.db.crud.car import (
     create_car_object,
     get_car_object_by_numberplate,
     delete_car_object_by_id,
 )
-from db.crud.controller import create_controller_object, get_controller_block_data
-from db.crud.linking import (
+from app.db.crud.controller import create_controller_object, get_controller_block_data
+from app.db.crud.linking import (
     create_controller_link,
     get_block_linked_controllers,
     create_car_link,
     get_car_linked_controllers,
 )
-from db.models.car import (
+from app.db.models.car import (
     CarCreateModel,
     CarDataModel,
     BlockCreateModel,
@@ -25,7 +25,7 @@ from db.models.car import (
     ControllerCreateModel,
     ControllerDataModel,
 )
-from db.session import get_db_session
+from app.db.session import get_db_session
 
 router = APIRouter(prefix="/crud")
 

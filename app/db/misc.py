@@ -1,4 +1,4 @@
-from config.db import DB_SCHEME, DB_HOST, DB_PORT
+from app.config.db import DB_SCHEME, DB_HOST, DB_PORT
 
 
 def get_db_uri():
