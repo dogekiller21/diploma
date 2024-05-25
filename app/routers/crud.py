@@ -51,13 +51,6 @@ async def create_controller(
     return await create_controller_object(data=data, session=session)
 
 
-@router.post("/controller")
-async def create_controller(
-    data: ControllerCreateModel, session=Depends(get_db_session)
-) -> ControllerDataModel:
-    return await create_controller_object(data=data, session=session)
-
-
 @router.post("/link_controller")
 async def link_controller(
     controller_id: str, block_id: str, session=Depends(get_db_session)

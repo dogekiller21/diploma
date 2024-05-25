@@ -99,14 +99,15 @@
                             <label for="fileInput" class="form-label">Файл</label>
                             <input type="file" class="form-control" id="fileInput" name="file">
                         </div>
-                        {% for param_key in request.query_params.keys() %}
-                            <input type="hidden" name="{{ param_key }}_query" value="{{ request.query_params.get(param_key, '') }}">
-                        {% endfor %}
+                        <div id="formErrorMessage" class="alert alert-danger" role="alert" style="display: none;"></div>
                     </form>
                 </div>
                 <div class="modal-footer">
+                    <span id="submitAddFirmwareLoading" class="spinner-border spinner-border-sm" role="status" aria-hidden="true" style="display: none;"></span>
+                    <button type="button" class="btn btn-primary" id="submitAddFirmwareBtn">
+                        <span id="submitAddFirmwareBtnText">Добавить</span>
+                    </button>
                     <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Закрыть</button>
-                    <button type="submit" class="btn btn-primary" form="addFirmwareForm">Добавить</button>
                 </div>
             </div>
         </div>
@@ -118,18 +119,97 @@
     <script src="https://cdn.datatables.net/1.13.4/js/jquery.dataTables.min.js"></script>
     <script src="https://cdn.datatables.net/1.13.4/js/dataTables.bootstrap5.min.js"></script>
     <script>
-        $(document).ready(function() {
-            $('#firmwareTable').DataTable({
-                columnDefs: [
-                    { orderable: true, targets: [0, 1, 2, 3, 4] }
-                ],
-                "order": [],
-                language: {
-                    "paginate": {
-                        "previous": "<i class='fas fa-angle-left'></i>",
-                        "next": "<i class='fas fa-angle-right'></i>"
+        document.addEventListener('DOMContentLoaded', function() {
+            if (window.DataTable) {
+                new DataTable('#firmwareTable', {
+                    columnDefs: [
+                        { orderable: true, targets: [0, 1, 2, 3, 4] }
+                    ],
+                    order: [],
+                    language: {
+                        paginate: {
+                            previous: "<i class='fas fa-angle-left'></i>",
+                            next: "<i class='fas fa-angle-right'></i>"
+                        }
                     }
+                });
+            } else {
+                console.error('DataTable library is not loaded.');
+            }
+
+
+            document.getElementById('submitAddFirmwareBtn').addEventListener('click', function() {
+                let form = document.getElementById('addFirmwareForm');
+                let formData = new FormData(form);
+                let submitButton = document.getElementById('submitAddFirmwareBtn');
+                let loadingIcon = document.getElementById('submitAddFirmwareLoading');
+                let errorMessage = document.getElementById('formErrorMessage');
+
+                function reset_loading_icon() {
+                    loadingIcon.className = 'spinner-border spinner-border-sm';
+                    loadingIcon.style["color"] = null;
+                    loadingIcon.style.display = 'none';
+
                 }
+                reset_loading_icon();
+
+                function display_loading() {
+                    errorMessage.style.display = 'none';
+                    errorMessage.innerText = '';
+
+                    submitButton.disabled = true;
+                    loadingIcon.className = 'spinner-border spinner-border-sm';
+                    loadingIcon.style.display = 'inline-block';
+                }
+                display_loading();
+
+                function display_error(message) {
+                    errorMessage.style.display = 'block';
+                    errorMessage.innerText = message || 'Ошибка при обработке запроса. Попробуйте ещё раз.';
+                    loadingIcon.className = 'bi bi-x-circle';
+                    submitButton.disabled = false;
+                    reset_loading_icon()
+                }
+
+                function display_success() {
+                    loadingIcon.className = "fa-regular fa-circle-check";
+                    loadingIcon.style["color"] = "#63E6BE";
+                    submitButton.disabled = false;
+                }
+
+                fetch(form.action, {
+                    method: 'POST',
+                    body: formData
+                })
+                    .then(response => response.json())
+                    .then(data => {
+                        console.log("data: ", data);
+                        if (!data.success) {
+                            console.log("Error adding firmware");
+                            display_error(data.message);
+                            return;
+                        }
+                        // let addFirmwareModal = new bootstrap.Modal(document.getElementById('addFirmwareModal'));
+                        // addFirmwareModal.hide();
+
+                        let firmwareTable = document.getElementById('firmwareTable').getElementsByTagName('tbody')[0];
+
+                        let newRow = document.createElement('tr');
+
+                        newRow.innerHTML = `
+                                <td>${data.firmware.id}</td>
+                                <td>${data.firmware.car}</td>
+                                <td>${data.firmware.block}</td>
+                                <td>${data.firmware.version}</td>
+                                <td>${data.firmware.release_date}</td>
+                                <td><a href="/static/firmwares/${data.firmware.file}" class="btn btn-primary btn-sm">Скачать</a></td>
+                            `;
+                        firmwareTable.appendChild(newRow);
+                        display_success();
+                    })
+                    .catch(() => {
+                        display_error();
+                    });
             });
         });
 

@@ -1,14 +1,12 @@
 import shutil
 from datetime import date
-from typing import Optional
+from typing import Optional, Annotated
 
 from fastapi import APIRouter, Query, Form, UploadFile, File
 from fastapi.responses import HTMLResponse
 from fastapi.templating import Jinja2Templates
 from fastapi.requests import Request
 from pydantic import BaseModel
-from fastapi.responses import RedirectResponse
-import urllib.parse
 
 router = APIRouter(prefix="")
 
@@ -22,6 +20,12 @@ class Firmware(BaseModel):
     version: str
     release_date: date
     file: str
+
+
+class FirmwareResponse(BaseModel):
+    success: bool
+    message: str | None = None
+    firmware: Firmware | None = None
 
 
 firmwares_db = [
@@ -92,20 +96,17 @@ async def firmwares_page(
     )
 
 
-@router.post("/add_firmware", response_class=HTMLResponse, name="add_firmware")
+@router.post("/add_firmware", name="add_firmware")
 async def add_firmware(
-    request: Request,
-    car: str = Form(...),
-    block: str = Form(...),
-    version: str = Form(...),
-    release_date: date = Form(...),
+    car: Annotated[str, Form(...)],
+    block: Annotated[str, Form(...)],
+    version: Annotated[str, Form(...)],
+    release_date: Annotated[date, Form(...)],
     file: UploadFile = File(...),
-    car_query: Optional[str] = Form(None),
-    block_query: Optional[str] = Form(None),
-):
+) -> FirmwareResponse:
     new_id = len(firmwares_db) + 1
 
-    file_location = f"static/firmwares/{file.filename}"
+    file_location = f"app/static/firmwares/{file.filename}"
     with open(file_location, "wb") as buffer:
         shutil.copyfileobj(file.file, buffer)
 
@@ -118,13 +119,7 @@ async def add_firmware(
         file=file.filename,
     )
     firmwares_db.append(new_firmware)
-    query_params = {}
-    if car_query:
-        query_params["car"] = car_query
-    if block_query:
-        query_params["block"] = block_query
-    query_string = urllib.parse.urlencode(query_params)
-    return RedirectResponse(url=f"/firmwares?{query_string}", status_code=303)
+    return FirmwareResponse(success=True, firmware=new_firmware)
 
 
 @router.get("/about", response_class=HTMLResponse, name="about_page")
