@@ -64,7 +64,7 @@ firmwares_db = [
 ]
 
 
-@router.get("/", response_class=HTMLResponse, name="main_page")
+@router.get("/", response_class=HTMLResponse, name="main_page", include_in_schema=False)
 async def main_page(request: Request):
     return templates.TemplateResponse(
         request=request,
@@ -73,7 +73,12 @@ async def main_page(request: Request):
     )
 
 
-@router.get("/firmwares", response_class=HTMLResponse, name="firmwares_page")
+@router.get(
+    "/firmwares",
+    response_class=HTMLResponse,
+    name="firmwares_page",
+    include_in_schema=False,
+)
 async def firmwares_page(
     request: Request,
     car: Optional[str] = Query(None),
