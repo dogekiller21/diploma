@@ -3,7 +3,7 @@ from uuid import UUID
 from neo4j import AsyncSession
 
 from app.db.crud.requests import make_request
-from app.db.models.car import CarCreateModel, CarDataModel
+from app.models.car import CarCreateModel, CarDataModel
 
 
 async def create_car_object(

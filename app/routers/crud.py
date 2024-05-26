@@ -17,7 +17,7 @@ from app.db.crud.linking import (
     create_car_link,
     get_car_linked_controllers,
 )
-from app.db.models.car import (
+from app.models.car import (
     CarCreateModel,
     CarDataModel,
     BlockCreateModel,

@@ -18,8 +18,8 @@
                 background-color: transparent;
             }
         }
-    </style>
 
+    </style>
 {% endblock %}
 
 {% block content %}
@@ -43,32 +43,34 @@
         Добавить прошивку
     </button>
 
-    <table id="firmwareTable" class="table table-striped">
-        <thead>
-            <tr>
-                <th scope="col">ID</th>
-                <th scope="col">Авто</th>
-                <th scope="col">Блок</th>
-                <th scope="col">Версия прошивки</th>
-                <th scope="col">Дата выпуска</th>
-                <th scope="col">Скачать</th>
-            </tr>
-        </thead>
-        <tbody>
-            {% for firmware in firmwares %}
-                <tr>
-                    <td>{{ firmware.id }}</td>
-                    <td>{{ firmware.car }}</td>
-                    <td>{{ firmware.block }}</td>
-                    <td>{{ firmware.version }}</td>
-                    <td>{{ firmware.release_date }}</td>
-                    <td>
-                        <a href="{{ url_for('static', path='firmwares/' + firmware.file) }}" class="btn btn-primary btn-sm">Скачать</a>
-                    </td>
-                </tr>
-            {% endfor %}
-        </tbody>
-    </table>
+    <div class="vstack gap-3" id="blockFirmwareList">
+        {% for block in blocks %}
+            <div class="card">
+                <div class="card-body">
+                    <div class="card-text" data-bs-toggle="collapse" data-bs-target="#firmwareList-{{ block.id }}" aria-expanded="false" aria-controls="firmwareList-{{ block.id }}">
+                        <h3>{{ block.name }}</h3>
+                    </div>
+                    <div id="firmwareList-{{ block.id }}" class="collapse">
+                        <ol class="list-group list-group-numbered">
+                            {% for firmware in block.firmwares %}
+                                <li class="list-group-item">
+                                    <div class="fw-bold">{{ firmware.car }}</div>
+                                    <p class="">Версия прошивки: {{ firmware.version }}</p>
+                                    <p class="">Дата выпуска: {{ firmware.release_date }}</p>
+                                    <a href="{{ url_for('static', path='firmwares/' + firmware.file) }}" class="btn btn-primary">Скачать</a>
+                                </li>
+
+                            {% endfor %}
+                        </ol>
+                    </div>
+
+                </div>
+                <div class="card-footer text-body-secondary">
+                    Всего прошивок доступно: <b>{{ block.firmware_count }}</b>
+                </div>
+            </div>
+        {% endfor %}
+    </div>
 
     <div class="modal fade" id="addFirmwareModal" tabindex="-1" aria-labelledby="addFirmwareModalLabel" aria-hidden="true">
         <div class="modal-dialog">
@@ -120,24 +122,6 @@
     <script src="https://cdn.datatables.net/1.13.4/js/dataTables.bootstrap5.min.js"></script>
     <script>
         document.addEventListener('DOMContentLoaded', function() {
-            if (window.DataTable) {
-                new DataTable('#firmwareTable', {
-                    columnDefs: [
-                        { orderable: true, targets: [0, 1, 2, 3, 4] }
-                    ],
-                    order: [],
-                    language: {
-                        paginate: {
-                            previous: "<i class='fas fa-angle-left'></i>",
-                            next: "<i class='fas fa-angle-right'></i>"
-                        }
-                    }
-                });
-            } else {
-                console.error('DataTable library is not loaded.');
-            }
-
-
             document.getElementById('submitAddFirmwareBtn').addEventListener('click', function() {
                 let form = document.getElementById('addFirmwareForm');
                 let formData = new FormData(form);
@@ -149,7 +133,6 @@
                     loadingIcon.className = 'spinner-border spinner-border-sm';
                     loadingIcon.style["color"] = null;
                     loadingIcon.style.display = 'none';
-
                 }
                 reset_loading_icon();
 
@@ -168,7 +151,7 @@
                     errorMessage.innerText = message || 'Ошибка при обработке запроса. Попробуйте ещё раз.';
                     loadingIcon.className = 'bi bi-x-circle';
                     submitButton.disabled = false;
-                    reset_loading_icon()
+                    reset_loading_icon();
                 }
 
                 function display_success() {
@@ -189,22 +172,22 @@
                             display_error(data.message);
                             return;
                         }
-                        // let addFirmwareModal = new bootstrap.Modal(document.getElementById('addFirmwareModal'));
-                        // addFirmwareModal.hide();
 
-                        let firmwareTable = document.getElementById('firmwareTable').getElementsByTagName('tbody')[0];
-
-                        let newRow = document.createElement('tr');
-
-                        newRow.innerHTML = `
-                                <td>${data.firmware.id}</td>
-                                <td>${data.firmware.car}</td>
-                                <td>${data.firmware.block}</td>
-                                <td>${data.firmware.version}</td>
-                                <td>${data.firmware.release_date}</td>
-                                <td><a href="/static/firmwares/${data.firmware.file}" class="btn btn-primary btn-sm">Скачать</a></td>
-                            `;
-                        firmwareTable.appendChild(newRow);
+                        const firmwareCard = document.createElement('div');
+                        firmwareCard.className = 'card mb-3';
+                        firmwareCard.innerHTML = `
+                            <div class="card-body">
+                                <h5 class="card-title">${data.firmware.car}</h5>
+                                <h6 class="card-subtitle mb-2 text-muted">${data.firmware.block}</h6>
+                                <p class="card-text">Версия прошивки: ${data.firmware.version}</p>
+                                <p class="card-text">Дата выпуска: ${data.firmware.release_date}</p>
+                                <a href="/static/firmwares/${data.firmware.file}" class="btn btn-primary">Скачать</a>
+                            </div>
+                        `;
+                        const blockElement = document.querySelector(`div[data-block-id="${data.firmware.block_id}"] .firmware-list`);
+                        if (blockElement) {
+                            blockElement.appendChild(firmwareCard);
+                        }
                         display_success();
                     })
                     .catch(() => {
@@ -212,6 +195,5 @@
                     });
             });
         });
-
     </script>
 {% endblock %}

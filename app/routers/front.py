@@ -6,7 +6,7 @@ from fastapi import APIRouter, Query, Form, UploadFile, File
 from fastapi.responses import HTMLResponse
 from fastapi.templating import Jinja2Templates
 from fastapi.requests import Request
-from pydantic import BaseModel
+from pydantic import BaseModel, validator, field_validator, Field, model_validator
 
 router = APIRouter(prefix="")
 
@@ -22,6 +22,20 @@ class Firmware(BaseModel):
     file: str
 
 
+class Block(BaseModel):
+    id: int
+    name: str
+    firmwares: list[Firmware]
+    firmware_count: int | None = None
+
+    @model_validator(mode="after")
+    @classmethod
+    def set_additional_info(cls, values):
+        if values.firmware_count is None:
+            values.firmware_count = len(values.firmwares)
+        return values
+
+
 class FirmwareResponse(BaseModel):
     success: bool
     message: str | None = None
@@ -29,37 +43,55 @@ class FirmwareResponse(BaseModel):
 
 
 firmwares_db = [
-    Firmware(
+    Block(
         id=1,
-        car="Toyota Corolla",
-        block="ECU",
-        version="1.0.0",
-        release_date=date(2022, 1, 1),
-        file="firmware1.bin",
+        name="ECU",
+        firmwares=[
+            Firmware(
+                id=1,
+                car="Toyota Corolla",
+                block="ECU",
+                version="1.0.0",
+                release_date=date(2022, 1, 1),
+                file="firmware1.bin",
+            ),
+            Firmware(
+                id=3,
+                car="Ford Focus",
+                block="ECU",
+                version="1.2.0",
+                release_date=date(2023, 3, 30),
+                file="firmware3.bin",
+            ),
+        ],
     ),
-    Firmware(
+    Block(
         id=2,
-        car="Honda Civic",
-        block="TCU",
-        version="1.1.0",
-        release_date=date(2023, 2, 15),
-        file="firmware2.bin",
+        name="TCU",
+        firmwares=[
+            Firmware(
+                id=2,
+                car="Honda Civic",
+                block="TCU",
+                version="1.1.0",
+                release_date=date(2023, 2, 15),
+                file="firmware2.bin",
+            ),
+        ],
     ),
-    Firmware(
+    Block(
         id=3,
-        car="Ford Focus",
-        block="ECU",
-        version="1.2.0",
-        release_date=date(2023, 3, 30),
-        file="firmware3.bin",
-    ),
-    Firmware(
-        id=4,
-        car="BMW 320i",
-        block="BCM",
-        version="2.0.0",
-        release_date=date(2024, 4, 10),
-        file="firmware4.bin",
+        name="BCM",
+        firmwares=[
+            Firmware(
+                id=4,
+                car="BMW 320i",
+                block="BCM",
+                version="2.0.0",
+                release_date=date(2024, 4, 10),
+                file="firmware4.bin",
+            ),
+        ],
     ),
 ]
 
@@ -84,19 +116,13 @@ async def firmwares_page(
     car: Optional[str] = Query(None),
     block: Optional[str] = Query(None),
 ):
-    filtered_firmwares = [
-        fw
-        for fw in firmwares_db
-        if (car.lower() in fw.car.lower() if car else True)
-        and (block.lower() in fw.block.lower() if block else True)
-    ]
     return templates.TemplateResponse(
         request=request,
         name="firmwares.html",
         context={
             "request": request,
             "title": "Поиск прошивок",
-            "firmwares": filtered_firmwares,
+            "blocks": firmwares_db,
         },
     )
 

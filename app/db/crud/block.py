@@ -1,7 +1,7 @@
 from neo4j import AsyncSession
 
 from app.db.crud.requests import make_request
-from app.db.models.car import BlockCreateModel, BlockDataModel
+from app.models.car import BlockCreateModel, BlockDataModel
 
 
 async def create_block_object(
