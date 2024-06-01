@@ -7,25 +7,20 @@ from fastapi.params import Query
 from app.db.crud.block import create_block_object
 from app.db.crud.car import (
     create_car_object,
-    get_car_object_by_numberplate,
     delete_car_object_by_id,
+    get_car_object_by_numberplate,
 )
 from app.db.crud.controller import create_controller_object, get_controller_block_data
 from app.db.crud.linking import (
+    create_car_link,
     create_controller_link,
     get_block_linked_controllers,
-    create_car_link,
     get_car_linked_controllers,
 )
-from app.models.car import (
-    CarCreateModel,
-    CarDataModel,
-    BlockCreateModel,
-    BlockDataModel,
-    ControllerCreateModel,
-    ControllerDataModel,
-)
 from app.db.session import get_db_session
+from app.models.block import BlockCreateModel, BlockDataModel
+from app.models.car import CarCreateModel, CarDataModel
+from app.models.controller import ControllerCreateModel, ControllerDataModel
 
 router = APIRouter(prefix="/crud")
 

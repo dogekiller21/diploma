@@ -47,22 +47,37 @@
         {% for block in blocks %}
             <div class="card">
                 <div class="card-body">
-                    <div class="card-text" data-bs-toggle="collapse" data-bs-target="#firmwareList-{{ block.id }}" aria-expanded="false" aria-controls="firmwareList-{{ block.id }}">
-                        <h3>{{ block.name }}</h3>
+                    <div class="card-title">
+                        <h3>Ford Mustang {{ block.name }} {{ block.id }}</h3>
                     </div>
-                    <div id="firmwareList-{{ block.id }}" class="collapse">
-                        <ol class="list-group list-group-numbered">
-                            {% for firmware in block.firmwares %}
-                                <li class="list-group-item">
-                                    <div class="fw-bold">{{ firmware.car }}</div>
-                                    <p class="">Версия прошивки: {{ firmware.version }}</p>
-                                    <p class="">Дата выпуска: {{ firmware.release_date }}</p>
-                                    <a href="{{ url_for('static', path='firmwares/' + firmware.file) }}" class="btn btn-primary">Скачать</a>
-                                </li>
 
-                            {% endfor %}
-                        </ol>
-                    </div>
+                    {% for firmware in block.firmwares %}
+                        <div class="accordion" id="firmwareAccordion-{{ block.id }}">
+                            <div class="accordion-item mb-2">
+                                <h2 class="accordion-header">
+                                    <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#firmwareCollapse-{{ firmware.id }}" aria-expanded="true" aria-controls="firmwareCollapse-{{ firmware.id }}">
+                                        Название контроллера: {{ firmware.car }}
+                                    </button>
+                                </h2>
+                                <div id="firmwareCollapse-{{ firmware.id }}" class="accordion-collapse collapse" data-bs-parent="#firmwareAccordion-{{ block.id }}">
+                                    <div class="accordion-body">
+                                        <ul class="list-group">
+                                            <li class="list-group-item">
+                                                <div class="fw-bold">Название контроллера: {{ firmware.car }}</div>
+                                                <p class="">Версия прошивки: {{ firmware.version }}</p>
+                                                <p class="">Дата выпуска: {{ firmware.release_date }}</p>
+                                                <div class="btn-group" role="group" aria-label="Firmware page button group">
+                                                    <a href="{{ url_for('firmware', firmware_id=firmware.id) }}" class="btn btn-outline-info">Все версии</a>
+                                                    <a href="{{ url_for('static', path='firmwares/' + firmware.file) }}" class="btn btn-outline-primary">Скачать</a>
+                                                </div>
+                                            </li>
+
+                                        </ul>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    {% endfor %}
 
                 </div>
                 <div class="card-footer text-body-secondary">

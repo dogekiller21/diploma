@@ -1,7 +1,7 @@
 from neo4j import AsyncSession
 
 from app.db.crud.requests import make_request
-from app.models.car import ControllerDataModel
+from app.models.controller import ControllerDataModel
 
 
 async def create_controller_link(

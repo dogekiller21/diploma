@@ -15,3 +15,9 @@ repos:
         files: .*/templates/.*\.html$
       - id: djcss
       - id: djjs
+
+  - repo: https://github.com/pycqa/isort
+    rev: 5.13.2
+    hooks:
+      - id: isort
+        args: [ "--profile", "black", "--filter-files" ]

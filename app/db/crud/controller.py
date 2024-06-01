@@ -1,15 +1,20 @@
 from neo4j import AsyncSession
 
 from app.db.crud.requests import make_request
-from app.models.car import ControllerCreateModel, ControllerDataModel
+from app.models.controller import ControllerCreateModel, ControllerDataModel
 
 
 async def create_controller_object(
     data: ControllerCreateModel, session: AsyncSession
 ) -> ControllerDataModel:
+    query = """
+    CREATE
+    (cc:Controller {id: randomUUID(), controller_name: $controller_name, data: $data})
+    RETURN cc.id AS id
+    """
     result = await make_request(
         session=session,
-        query="CREATE (cc:Controller {id: randomUUID(), controller_name: $controller_name, data: $data}) RETURN cc.id AS id",
+        query=query,
         controller_name=data.controller_name,
         data=data.data,
     )

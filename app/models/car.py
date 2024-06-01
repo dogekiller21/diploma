@@ -1,6 +1,6 @@
-from uuid import UUID
-
 from pydantic import BaseModel
+
+from app.models.mixins import IDMixin
 
 
 class CarCreateModel(BaseModel):
@@ -8,28 +8,5 @@ class CarCreateModel(BaseModel):
     info: str
 
 
-class BlockCreateModel(BaseModel):
-    block_name: str
-    data: bytes
-
-
-class ControllerCreateModel(BaseModel):
-    controller_name: str
-    data: bytes
-
-
-class CarDataModel(BaseModel):
-    numberplate: str
-    info: str
-    id: UUID
-
-
-class BlockDataModel(BaseModel):
-    block_name: str
-    id: UUID
-
-
-class ControllerDataModel(BaseModel):
-    controller_name: str
-    data: bytes
-    id: UUID
+class CarDataModel(CarCreateModel, IDMixin):
+    pass

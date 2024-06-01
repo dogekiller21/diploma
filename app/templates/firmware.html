@@ -1,0 +1,52 @@
+{% extends "base.html" %}
+
+{% block head %}
+{% endblock %}
+
+{% block styles %}
+{% endblock %}
+
+{% block content %}
+    <div class="container mt-4">
+        {% set firmware = versions[0] %}
+        <h1 class="mb-4">Прошивка для микроконтроллера {{ firmware.id }} в блоке {{ firmware.block }}</h1>
+
+        <div class="card mb-4">
+            <div class="card-header">
+                <h3 class="mb-0">Информация о микроконтроллере</h3>
+            </div>
+            <div class="card-body">
+                <p><strong>Название контроллера:</strong> {{ firmware.id }} {{ firmware.car }} {{ firmware.block }}</p>
+                <p><strong>Блок:</strong> {{ firmware.block }}</p>
+                <p><strong>Текущая версия прошивки:</strong> {{ firmware.version }}</p>
+                <p><strong>Дата выпуска текущей версии:</strong> {{ firmware.release_date }}</p>
+                <a href="{{ url_for('static', path='firmwares/' + firmware.file) }}" class="btn btn-primary">Скачать</a>
+            </div>
+        </div>
+
+        <div class="card mb-4">
+            <div class="card-header">
+                <h3 class="mb-0">Другие версии</h3>
+            </div>
+            <ul class="list-group list-group-flush">
+                {% for version in versions[1:] %}
+                    <li class="list-group-item">
+                        <div class="d-flex justify-content-between align-items-center">
+                            <div>
+                                <h5>Версия: {{ version.version }}</h5>
+                                <p>Дата выпуска: {{ version.release_date }}</p>
+                            </div>
+                            <a href="{{ url_for('static', path='firmwares/' + version.file) }}" class="btn btn-primary">Скачать</a>
+                        </div>
+                    </li>
+                {% endfor %}
+            </ul>
+        </div>
+    </div>
+{% endblock %}
+
+{% block scripts %}
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.11.8/dist/umd/popper.min.js" integrity="sha384-I7E8VVD/ismYTF4hNIPjVp/Zjvgyol6VFvRkX/vR+Vc4jQkC+hVqc2pM8ODewa9r" crossorigin="anonymous"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.min.js" integrity="sha384-0pUGZvbkm6XF6gxjEnlmuGrJXVbNuzT9qBBavbLwCsOGabYfZo0T0to5eqruptLy" crossorigin="anonymous"></script>
+{% endblock %}

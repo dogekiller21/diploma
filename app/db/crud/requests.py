@@ -1,6 +1,6 @@
 import asyncio
 
-from neo4j import AsyncSession, AsyncResult
+from neo4j import AsyncResult, AsyncSession
 
 
 async def make_request(query: str, session: AsyncSession, **kwargs) -> AsyncResult:

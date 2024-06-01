@@ -1,16 +1,33 @@
 import shutil
 from datetime import date
-from typing import Optional, Annotated
+from typing import Annotated, Any, Optional
 
-from fastapi import APIRouter, Query, Form, UploadFile, File
+from fastapi import APIRouter, File, Form, Query, UploadFile, datastructures
+from fastapi.requests import Request
 from fastapi.responses import HTMLResponse
 from fastapi.templating import Jinja2Templates
-from fastapi.requests import Request
-from pydantic import BaseModel, validator, field_validator, Field, model_validator
+from jinja2 import pass_context
+from pydantic import BaseModel, Field, field_validator, model_validator, validator
 
 router = APIRouter(prefix="")
 
 templates = Jinja2Templates(directory="app/templates")
+
+
+@pass_context
+def https_url_for(context: dict, name: str, **path_params: Any) -> datastructures.URL:
+    """
+    https://stackoverflow.com/questions/70521784/fastapi-links-created-by-url-for-in-jinja2-template-use-http-instead-of-https
+
+    """
+    request = context.get("request")
+    http_url = request.url_for(name, **path_params)
+
+    # Replace 'http' with 'https'
+    return http_url.replace(scheme="https")
+
+
+templates.env.globals["https_url_for"] = https_url_for
 
 
 class Firmware(BaseModel):
@@ -95,6 +112,129 @@ firmwares_db = [
     ),
 ]
 
+firmware_versions = {
+    1: [
+        Firmware(
+            id=1,
+            car="Toyota Corolla",
+            block="ECU",
+            version="1.0.1",
+            release_date=date(2022, 1, 1),
+            file="firmware1.bin",
+        ),
+        Firmware(
+            id=1,
+            car="Toyota Corolla",
+            block="ECU",
+            version="1.0.0",
+            release_date=date(2021, 1, 1),
+            file="firmware2.bin",
+        ),
+        Firmware(
+            id=1,
+            car="Toyota Corolla",
+            block="ECU",
+            version="1.0.2",
+            release_date=date(2023, 1, 1),
+            file="firmware3.bin",
+        ),
+    ],
+    2: [
+        Firmware(
+            id=2,
+            car="Honda Civic",
+            block="TCU",
+            version="1.1.1",
+            release_date=date(2021, 2, 15),
+            file="firmware1.bin",
+        ),
+        Firmware(
+            id=2,
+            car="Honda Civic",
+            block="TCU",
+            version="2.1.0",
+            release_date=date(2022, 2, 15),
+            file="firmware2.bin",
+        ),
+        Firmware(
+            id=2,
+            car="Honda Civic",
+            block="TCU",
+            version="3.1.0",
+            release_date=date(2023, 2, 15),
+            file="firmware3.bin",
+        ),
+        Firmware(
+            id=2,
+            car="Honda Civic",
+            block="TCU",
+            version="4.2.3",
+            release_date=date(2024, 2, 15),
+            file="firmware4.bin",
+        ),
+    ],
+    3: [
+        Firmware(
+            id=3,
+            car="Ford Focus",
+            block="ECU",
+            version="1.2.0",
+            release_date=date(2023, 3, 30),
+            file="firmware1.bin",
+        ),
+        Firmware(
+            id=3,
+            car="Ford Focus",
+            block="ECU",
+            version="0.2.0",
+            release_date=date(2022, 3, 30),
+            file="firmware2.bin",
+        ),
+    ],
+    4: [
+        Firmware(
+            id=4,
+            car="BMW 320i",
+            block="BCM",
+            version="1.0.0",
+            release_date=date(2021, 4, 10),
+            file="firmware1.bin",
+        ),
+        Firmware(
+            id=4,
+            car="BMW 320i",
+            block="BCM",
+            version="0.0.1",
+            release_date=date(2020, 4, 10),
+            file="firmware2.bin",
+        ),
+        Firmware(
+            id=4,
+            car="BMW 320i",
+            block="BCM",
+            version="2.0.0",
+            release_date=date(2022, 4, 10),
+            file="firmware3.bin",
+        ),
+        Firmware(
+            id=4,
+            car="BMW 320i",
+            block="BCM",
+            version="3.0.0",
+            release_date=date(2023, 4, 10),
+            file="firmware4.bin",
+        ),
+        Firmware(
+            id=4,
+            car="BMW 320i",
+            block="BCM",
+            version="4.0.1",
+            release_date=date(2024, 4, 10),
+            file="firmware5.bin",
+        ),
+    ],
+}
+
 
 @router.get("/", response_class=HTMLResponse, name="main_page", include_in_schema=False)
 async def main_page(request: Request):
@@ -123,6 +263,30 @@ async def firmwares_page(
             "request": request,
             "title": "Поиск прошивок",
             "blocks": firmwares_db,
+        },
+    )
+
+
+@router.get(
+    "/firmware/{firmware_id}",
+    response_class=HTMLResponse,
+    name="firmware",
+    include_in_schema=False,
+)
+async def firmwares_page(
+    request: Request,
+    firmware_id: int,
+):
+    versions = sorted(
+        firmware_versions[firmware_id], key=lambda x: x.release_date, reverse=True
+    )
+    return templates.TemplateResponse(
+        request=request,
+        name="firmware.html",
+        context={
+            "request": request,
+            "title": f"{firmware_id} - Прошивка",
+            "versions": versions,
         },
     )
 
