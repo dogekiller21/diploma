@@ -4,20 +4,10 @@ from uuid import UUID
 from fastapi import APIRouter, Depends
 from fastapi.params import Query
 
-from app.db.crud.block import create_block_object
-from app.db.crud.car import (
-    create_car_object,
-    delete_car_object_by_id,
-    get_car_object_by_numberplate,
-)
-from app.db.crud.controller import create_controller_object, get_controller_block_data
-from app.db.crud.linking import (
-    create_car_link,
-    create_controller_link,
-    get_block_linked_controllers,
-    get_car_linked_controllers,
-)
-from app.db.session import get_db_session
+from app.db.block.storage import BlockStorage
+from app.db.car.storage import CarStorage
+from app.db.controller.storage import ControllerStorage
+from app.db.session import build_storage_dependency, get_db_session
 from app.models.block import BlockCreateModel, BlockDataModel
 from app.models.car import CarCreateModel, CarDataModel
 from app.models.controller import ControllerCreateModel, ControllerDataModel
@@ -27,23 +17,26 @@ router = APIRouter(prefix="/crud")
 
 @router.post("/car")
 async def create_car(
-    data: CarCreateModel, session=Depends(get_db_session)
+    data: CarCreateModel,
+    storage: CarStorage = Depends(build_storage_dependency(CarStorage)),
 ) -> CarDataModel:
-    return await create_car_object(data=data, session=session)
+    return await storage.create_car_object(data=data)
 
 
 @router.post("/block")
 async def create_block(
-    data: BlockCreateModel, session=Depends(get_db_session)
+    data: BlockCreateModel,
+    storage: BlockStorage = Depends(build_storage_dependency(BlockStorage)),
 ) -> BlockDataModel:
-    return await create_block_object(data=data, session=session)
+    return await storage.create_block_object(data=data)
 
 
 @router.post("/controller")
 async def create_controller(
-    data: ControllerCreateModel, session=Depends(get_db_session)
+    data: ControllerCreateModel,
+    storage: ControllerStorage = Depends(build_storage_dependency(ControllerStorage)),
 ) -> ControllerDataModel:
-    return await create_controller_object(data=data, session=session)
+    return await storage.create_controller_object(data=data)
 
 
 @router.post("/link_controller")

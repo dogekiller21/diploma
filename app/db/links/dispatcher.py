@@ -1,12 +1,15 @@
 from neo4j import AsyncSession
 
-from app.db.crud.requests import make_request
 from app.models.controller import ControllerDataModel
+
+
+class LinkDispatcher: ...
 
 
 async def create_controller_link(
     controller_id: str, block_id: str, session: AsyncSession
 ) -> None:
+    raise NotImplementedError()
     await make_request(
         session=session,
         query="MATCH (cc:Controller) WHERE cc.id = $controller_id "
@@ -19,6 +22,7 @@ async def create_controller_link(
 
 
 async def create_car_link(car_id: str, block_id: str, session: AsyncSession) -> None:
+    raise NotImplementedError()
     await make_request(
         session=session,
         query="MATCH (cc:Car) WHERE cc.id = $car_id "
@@ -33,6 +37,7 @@ async def create_car_link(car_id: str, block_id: str, session: AsyncSession) -> 
 async def get_block_linked_controllers(
     block_id: str, session: AsyncSession
 ) -> list[ControllerDataModel]:
+    raise NotImplementedError()
     result = await make_request(
         session=session,
         query="MATCH (cc:Controller)-[:LINKED]->(blocks:Block) WHERE blocks.id = $block_id return cc",
@@ -47,6 +52,7 @@ async def get_block_linked_controllers(
 async def get_car_linked_controllers(
     car_id: str, session: AsyncSession
 ) -> list[ControllerDataModel]:
+    raise NotImplementedError()
     result = await make_request(
         session=session,
         query="MATCH (car:Car)-[:LINKED]->(blocks)<-[:LINKED]-(controllers) WHERE car.id = $car_id return controllers, blocks",

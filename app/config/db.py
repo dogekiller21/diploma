@@ -1,9 +1,5 @@
 import os
 
-from dotenv import load_dotenv
-
-load_dotenv()
-
 DB_SCHEME = os.environ["DB_SCHEME"]
 DB_HOST = os.environ["DB_HOST"]
 DB_PORT = os.environ["DB_PORT"]
