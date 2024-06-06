@@ -19,6 +19,7 @@ async def get_db_session():
 
 
 TClass = TypeVar("TClass", bound=BaseStorage)
+TClassAny = TypeVar("TClassAny")
 TReturn = (Coroutine[Any, Any, TClass],)
 
 
@@ -27,3 +28,10 @@ def build_storage_dependency(storage_class: type[TClass]) -> TReturn:
         return storage_class(session=session)
 
     return get_storage
+
+
+def build_dispatcher_dependency(dispatcher_class: type[TClassAny]) -> TReturn:
+    async def get_dispatcher(session: AsyncSession = Depends(get_db_session)):
+        return dispatcher_class(session=session)
+
+    return get_dispatcher

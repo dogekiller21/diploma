@@ -49,7 +49,7 @@ class CarStorage(BaseStorage):
         record_data = record.data()
         return CarDataModel(**record_data)
 
-    async def delete_car_object_by_id(self, internal_id: UUID) -> int:
+    async def delete_car_object_by_id(self, internal_id: str) -> int:
         """Возвращает кол-во удаленных записей"""
         query = "MATCH (cc:Car) WHERE cc.id = $id DETACH DELETE cc RETURN count(cc) as items_deleted"
         result = await self.make_request(

@@ -1,52 +1,49 @@
-from neo4j import AsyncSession
+import asyncio
+from uuid import UUID
+
+from neo4j import AsyncResult, AsyncSession
 
 from app.models.controller import ControllerDataModel
 
 
-class LinkDispatcher: ...
+class LinkDispatcher:
+    def __init__(self, session: AsyncSession):
+        self.session = session
 
+    async def make_request(self, query: str, **kwargs) -> AsyncResult:
+        try:
+            result: AsyncResult = await self.session.run(query=query, **kwargs)
+        except asyncio.CancelledError:
+            self.session.cancel()
+            raise
+        else:
+            return result
 
-async def create_controller_link(
-    controller_id: str, block_id: str, session: AsyncSession
-) -> None:
-    raise NotImplementedError()
-    await make_request(
-        session=session,
-        query="MATCH (cc:Controller) WHERE cc.id = $controller_id "
-        "MATCH (bb:Block) WHERE bb.id = $block_id CREATE "
-        "(cc)-[:LINKED]->(bb)",
-        controller_id=controller_id,
-        block_id=block_id,
-    )
-    return
+    async def link_controller_to_block(self, controller_id: str, block_id: str):
+        query = """
+            MATCH (cc:Controller) WHERE cc.id = $controller_id
+            MATCH (bb:Block) WHERE bb.id = $block_id
+            CREATE (cc)-[:LINKED_BLOCK]->(bb)
+            RETURN count(cc) as linked_controllers
+        """
 
+        result = await self.make_request(
+            query=query, controller_id=controller_id, block_id=block_id
+        )
+        result_data = await result.single()
+        return result_data["linked_controllers"]
 
-async def create_car_link(car_id: str, block_id: str, session: AsyncSession) -> None:
-    raise NotImplementedError()
-    await make_request(
-        session=session,
-        query="MATCH (cc:Car) WHERE cc.id = $car_id "
-        "MATCH (bb:Block) WHERE bb.id = $block_id CREATE "
-        "(cc)-[:LINKED]->(bb)",
-        car_id=car_id,
-        block_id=block_id,
-    )
-    return
+    async def link_car_to_block(self, car_id: str, block_id: str):
+        query = """
+            MATCH (cc:Car) WHERE cc.id = $car_id
+            MATCH (bb:Block) WHERE bb.id = $block_id
+            CREATE (cc)-[:LINKED_CAR]->(bb)
+            RETURN count(cc) as linked_cars
+        """
 
-
-async def get_block_linked_controllers(
-    block_id: str, session: AsyncSession
-) -> list[ControllerDataModel]:
-    raise NotImplementedError()
-    result = await make_request(
-        session=session,
-        query="MATCH (cc:Controller)-[:LINKED]->(blocks:Block) WHERE blocks.id = $block_id return cc",
-        block_id=block_id,
-    )
-    data = await result.data()
-    if not data:
-        return []
-    return [ControllerDataModel(**item.get("cc")) for item in data]
+        result = await self.make_request(query=query, car_id=car_id, block_id=block_id)
+        result_data = await result.single()
+        return result_data["linked_cars"]
 
 
 async def get_car_linked_controllers(

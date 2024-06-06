@@ -9,12 +9,13 @@ class BlockStorage(BaseStorage):
     ) -> BlockDataModel:
         query = """
         CREATE (bb:Block {id: randomUUID(), block_name: $block_name, model_name: $model_name})
-        RETURN bb.id AS id
+        RETURN bb
         """
         result = await self.make_request(
             query=query,
-            block_name=data.block_name,
+            **data.model_dump(),
         )
         record = await result.single()
         record_data = record.data()
-        return BlockDataModel(**record_data)
+        print(record_data)
+        return BlockDataModel(**record_data["bb"])
