@@ -13,8 +13,21 @@ from app.db.session import build_dispatcher_dependency, build_storage_dependency
 from app.models.block import BlockCreateModel, BlockDataModel
 from app.models.car import CarCreateModel, CarDataModel
 from app.models.controller import ControllerCreateModel, ControllerDataModel
+from app.models.response import ControllerResponseModel
 
 router = APIRouter(prefix="/crud")
+
+
+@router.post("/controller_block")
+async def create_controller_block(
+    controller: ControllerCreateModel,
+    block: BlockCreateModel,
+    storage: LinkStorage = Depends(build_storage_dependency(LinkStorage)),
+) -> None:
+    return await storage.create_controller_block_full(
+        controller=controller,
+        block=block,
+    )
 
 
 @router.post("/car")
@@ -92,6 +105,25 @@ async def get_controller_data(
     storage: ControllerStorage = Depends(build_storage_dependency(ControllerStorage)),
 ) -> list[bytes] | None:
     return await storage.get_controller_data(controller_id=controller_id)
+
+
+@router.get("/controllers")
+async def get_controller(
+    offset: int = 0,
+    limit: int = 5,
+    storage: ControllerStorage = Depends(build_storage_dependency(ControllerStorage)),
+) -> list[ControllerResponseModel]:
+    return await storage.get_controllers_response(limit=limit, offset=offset)
+
+
+@router.get("/blocks", name="get_blocks")
+async def get_blocks(
+    offset: int = 0,
+    limit: int = 5,
+    query: str = None,
+    storage: BlockStorage = Depends(build_storage_dependency(BlockStorage)),
+) -> list[BlockDataModel]:
+    return await storage.get_blocks_response(limit=limit, offset=offset, query=query)
 
 
 @router.delete("/car")

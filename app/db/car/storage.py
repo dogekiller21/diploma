@@ -25,7 +25,10 @@ class CarStorage(BaseStorage):
         self,
         numberplate: str,
     ) -> CarDataModel | None:
-        query = "MATCH (cc:Car) WHERE cc.numberplate = $numberplate RETURN cc.id as id, cc.numberplate as numberplate, cc.info as info"
+        query = """
+            MATCH (cc:Car) WHERE cc.numberplate = $numberplate
+            RETURN cc.id as id, cc.numberplate as numberplate, cc.info as info
+        """
         result = await self.make_request(
             query=query,
             numberplate=numberplate,

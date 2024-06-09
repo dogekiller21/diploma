@@ -1,7 +1,9 @@
-from uuid import UUID
-
 from app.db.base.storage import BaseStorage
-from app.models.controller import ControllerDataModel
+from app.db.block.storage import BlockStorage
+from app.db.controller.storage import ControllerStorage
+from app.db.links.dispatcher import LinkDispatcher
+from app.models.block import BlockCreateModel
+from app.models.controller import ControllerCreateModel, ControllerDataModel
 
 
 class LinkStorage(BaseStorage):
@@ -34,3 +36,19 @@ class LinkStorage(BaseStorage):
         if not data:
             return []
         return [ControllerDataModel(**item.get("cc")) for item in data]
+
+    async def create_controller_block_full(
+        self, controller: ControllerCreateModel, block: BlockCreateModel
+    ):
+        controller_storage = ControllerStorage(self.session)
+        block_storage = BlockStorage(self.session)
+        dispatcher = LinkDispatcher(self.session)
+
+        new_controller = await controller_storage.create_controller_object(controller)
+        new_block = await block_storage.create_block_object(block)
+
+        await dispatcher.link_controller_to_block(
+            controller_id=str(new_controller.id), block_id=str(new_block.id)
+        )
+
+        return new_controller

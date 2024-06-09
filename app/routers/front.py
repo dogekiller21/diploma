@@ -2,12 +2,16 @@ import shutil
 from datetime import date
 from typing import Annotated, Any, Optional
 
-from fastapi import APIRouter, File, Form, Query, UploadFile, datastructures
+from fastapi import APIRouter, Depends, File, Form, Query, UploadFile, datastructures
 from fastapi.requests import Request
 from fastapi.responses import HTMLResponse
 from fastapi.templating import Jinja2Templates
 from jinja2 import pass_context
 from pydantic import BaseModel, Field, field_validator, model_validator, validator
+
+from app.db.block.storage import BlockStorage
+from app.db.controller.storage import ControllerStorage
+from app.db.session import build_storage_dependency
 
 router = APIRouter(prefix="")
 
@@ -255,14 +259,18 @@ async def firmwares_page(
     request: Request,
     car: Optional[str] = Query(None),
     block: Optional[str] = Query(None),
+    storage: BlockStorage = Depends(build_storage_dependency(BlockStorage)),
 ):
+    firmwares = await storage.get_block_with_controllers_response(
+        limit=100, offset=0, block_id=block
+    )
     return templates.TemplateResponse(
         request=request,
         name="firmwares.html",
         context={
             "request": request,
             "title": "Поиск прошивок",
-            "blocks": firmwares_db,
+            "blocks": firmwares,
         },
     )
 

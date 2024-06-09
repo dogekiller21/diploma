@@ -2,6 +2,7 @@ from uuid import UUID
 
 from app.db.base.storage import BaseStorage
 from app.models.controller import ControllerCreateModel, ControllerDataModel
+from app.models.response import ControllerResponseModel
 
 
 class ControllerStorage(BaseStorage):
@@ -22,7 +23,7 @@ class ControllerStorage(BaseStorage):
         record = await result.single()
         record_data = record.data()
         record_data.update(data.dict())
-        return ControllerDataModel(**record_data)
+        return ControllerDataModel.model_validate(record_data)
 
     async def get_controller_data(self, controller_id: str) -> list[bytes] | None:
         result = await self.make_request(
@@ -33,3 +34,37 @@ class ControllerStorage(BaseStorage):
         if not data:
             return None
         return data[0]["data"]
+
+    async def get_controllers_response(
+        self, limit: int, offset: int, block_id: str | None = None
+    ) -> list[ControllerResponseModel]:
+        db_query = """
+            MATCH (cc:Controller)-[:LINKED_BLOCK]->(bb:Block)<-[:LINKED_CAR]-(car:Car)
+
+        """
+        if block_id is not None:
+            db_query += f"""
+             WHERE
+             bb.id = $block_id
+        """
+
+        db_query += """
+            RETURN
+            cc.data as data,
+            cc.controller_name as controller_name,
+            cc.id as id,
+            bb as block,
+            count(DISTINCT car) as cars_count
+            SKIP $offset
+            LIMIT $limit
+        """
+
+        result = await self.make_request(
+            query=db_query,
+            limit=limit,
+            offset=offset,
+        )
+        data = await result.data()
+        if not data:
+            return []
+        return [ControllerResponseModel.model_validate(item) for item in data]
