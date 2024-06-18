@@ -4,7 +4,7 @@ certs:
 
 
 start-dev:
-	docker-compose -f docker-compose-dev.yaml up
+	docker-compose -f docker-compose-dev.yaml up --build
 
 stop-dev:
 	docker-compose -f docker-compose-dev.yaml down

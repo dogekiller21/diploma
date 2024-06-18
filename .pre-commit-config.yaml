@@ -16,7 +16,6 @@ repos:
       - id: djcss
         files: .*/static/css/.*\.css$
       - id: djjs
-        files: .*/static/js/.*\.js$
 
   - repo: https://github.com/pycqa/isort
     rev: 5.13.2

@@ -1,19 +1,27 @@
 from pydantic import BaseModel
 
+from app.models.block import BlockDataModel
 from app.models.mixins import IDMixin
+from app.models.versions import VersionCreateModel, VersionResponseModel
 
 
-class BareControllerModel(BaseModel):
+class ControllerCreateModel(BaseModel):
     controller_name: str
 
 
-class ControllerCreateModel(BareControllerModel):
-    data: bytes
+class ControllerVersionCreateModel(ControllerCreateModel):
+    version: VersionCreateModel
 
 
 class ControllerDataModel(ControllerCreateModel, IDMixin):
     pass
 
 
-class BareIDControllerModel(BareControllerModel, IDMixin):
-    pass
+class BlockControllerResponseModel(ControllerDataModel):
+    first_version: VersionResponseModel
+
+
+class SingleBlockControllerResponseModel(ControllerDataModel):
+    first_version: VersionResponseModel
+    versions: list[VersionResponseModel]
+    block: BlockDataModel

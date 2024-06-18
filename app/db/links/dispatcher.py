@@ -1,13 +1,13 @@
 import asyncio
 from uuid import UUID
 
-from neo4j import AsyncResult, AsyncSession
+from neo4j import AsyncResult, AsyncSession, AsyncTransaction
 
 from app.models.controller import ControllerDataModel
 
 
 class LinkDispatcher:
-    def __init__(self, session: AsyncSession):
+    def __init__(self, session: AsyncSession | AsyncTransaction):
         self.session = session
 
     async def make_request(self, query: str, **kwargs) -> AsyncResult:
@@ -45,17 +45,18 @@ class LinkDispatcher:
         result_data = await result.single()
         return result_data["linked_cars"]
 
+    async def link_version_to_controller(
+        self, version_id: str, controller_id: str
+    ) -> int:
+        query = """
+            MATCH (cc:Controller) WHERE cc.id = $controller_id
+            MATCH (vv:Version) WHERE vv.id = $version_id
+            CREATE (cc)-[:LINKED_VERSION]->(vv)
+            RETURN count(cc) as linked_controllers
+        """
 
-async def get_car_linked_controllers(
-    car_id: str, session: AsyncSession
-) -> list[ControllerDataModel]:
-    raise NotImplementedError()
-    result = await make_request(
-        session=session,
-        query="MATCH (car:Car)-[:LINKED]->(blocks)<-[:LINKED]-(controllers) WHERE car.id = $car_id return controllers, blocks",
-        car_id=car_id,
-    )
-    data = await result.data()
-    if not data:
-        return []
-    return [ControllerDataModel(**item.get("controllers")) for item in data]
+        result = await self.make_request(
+            query=query, version_id=version_id, controller_id=controller_id
+        )
+        result_data = await result.single()
+        return result_data["linked_controllers"]

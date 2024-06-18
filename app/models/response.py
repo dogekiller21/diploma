@@ -1,11 +1,16 @@
-from pydantic import model_validator
+from pydantic import BaseModel, model_validator
 
 from app.models.block import BlockDataModel
-from app.models.controller import BareIDControllerModel, ControllerDataModel
+from app.models.controller import (
+    BlockControllerResponseModel,
+    ControllerDataModel,
+    SingleBlockControllerResponseModel,
+)
+from app.models.versions import VersionResponseModel
 
 
 class BlockControllersResponseModel(BlockDataModel):
-    firmwares: list[BareIDControllerModel]
+    firmwares: list[BlockControllerResponseModel]
     cars_count: int
     firmware_count: int | None = None
 
@@ -20,3 +25,22 @@ class BlockControllersResponseModel(BlockDataModel):
 class ControllerResponseModel(ControllerDataModel):
     block: BlockDataModel
     cars_count: int
+
+
+class ControllerVersionsResponseModel(BaseModel):
+    controller: ControllerResponseModel
+
+
+class BaseResponse(BaseModel):
+    success: bool
+    message: str | None = None
+
+
+class FirmwareResponse(BaseResponse):
+
+    firmware: SingleBlockControllerResponseModel | None = None
+
+
+class FirmwareVersionResponse(BaseResponse):
+
+    version: VersionResponseModel | None = None

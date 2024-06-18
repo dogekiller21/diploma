@@ -2,8 +2,12 @@
 
 [![Code style: black](https://img.shields.io/badge/code%20style-black-000000.svg)](https://github.com/psf/black)
 
+# Deploy
 
-## Dev
+TODO
+
+
+# Dev
 
 ```bash
 pip install -r requirements-dev.txt
@@ -29,10 +33,19 @@ docker-compose -f docker-compose-dev.yaml up -d
 make start-dev
 ```
 
+### Deployed
 Приложение доступно на `localhost`
 
 Документацию к api можно прочитать на `localhost/docs`
 
+### Neo4j
+Neo4j browser: `localhost:7888/browser`
+
+Стандартный пользователь: `neo4j`
+
+Стандартная бд: `neo4j`
+
+Стандартный пароль: `qwerty1234`
 
 # TODO
 
