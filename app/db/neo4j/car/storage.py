@@ -1,6 +1,6 @@
 from uuid import UUID
 
-from app.db.base.storage import BaseStorage
+from app.db.neo4j.base.storage import BaseStorage
 from app.models.car import CarCreateModel, CarDataModel
 
 

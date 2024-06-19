@@ -1,19 +1,17 @@
 import logging
 
-from neo4j import AsyncTransaction
-
-from app.db.base.storage import BaseStorage
-from app.db.block.storage import BlockStorage
-from app.db.controller.storage import ControllerStorage
-from app.db.links.dispatcher import LinkDispatcher
-from app.db.version.storage import VersionStorage
-from app.models.block import BlockCreateModel, ModalBlockCreateModel
+from app.db.neo4j.base.storage import BaseStorage
+from app.db.neo4j.block.storage import BlockStorage
+from app.db.neo4j.controller.storage import ControllerStorage
+from app.db.neo4j.links.dispatcher import LinkDispatcher
+from app.db.neo4j.version.storage import VersionStorage
+from app.models.block import ModalBlockCreateModel
 from app.models.controller import (
     ControllerCreateModel,
     ControllerDataModel,
-    SingleBlockControllerResponseModel,
+    SingleControllerDataModel,
 )
-from app.models.response import FirmwareResponse, FirmwareVersionResponse
+from app.models.response import FirmwareAPIResponse, FirmwareVersionAPIResponse
 from app.models.versions import VersionCreateModel, VersionResponseModel
 
 logger = logging.getLogger(__name__)
@@ -59,7 +57,7 @@ class LinkStorage(BaseStorage):
         controller: ControllerCreateModel,
         block: ModalBlockCreateModel,
         version: VersionCreateModel,
-    ) -> FirmwareResponse:
+    ) -> FirmwareAPIResponse:
         async with await self.session.begin_transaction() as tx:
             try:
                 controller_storage = ControllerStorage(session=tx)
@@ -76,7 +74,7 @@ class LinkStorage(BaseStorage):
                     new_block = await block_storage.get_block_by_id(block_id=block.id)
 
                 if new_block is None:
-                    return FirmwareResponse(
+                    return FirmwareAPIResponse(
                         success=False, message="Cant find corresponding block"
                     )
 
@@ -92,23 +90,21 @@ class LinkStorage(BaseStorage):
                 response_dict["block"] = new_block.dict()
                 response_dict["first_version"] = new_version.dict()
                 response_dict["versions"] = [new_version.dict()]
-                response = SingleBlockControllerResponseModel.model_validate(
-                    response_dict
-                )
+                response = SingleControllerDataModel.model_validate(response_dict)
 
             except Exception as e:
                 logger.error("Error creating full controller: %s", e, exc_info=e)
                 await tx.rollback()
-                return FirmwareResponse(
+                return FirmwareAPIResponse(
                     success=False, message="Error creating full controller"
                 )
             else:
                 await tx.commit()
-                return FirmwareResponse(success=True, firmware=response)
+                return FirmwareAPIResponse(success=True, firmware=response)
 
     async def create_firmware_version(
         self, firmware_id: str, version: VersionCreateModel
-    ) -> FirmwareVersionResponse:
+    ) -> FirmwareVersionAPIResponse:
         async with await self.session.begin_transaction() as tx:
             try:
                 version_storage = VersionStorage(session=tx)
@@ -123,11 +119,11 @@ class LinkStorage(BaseStorage):
             except Exception as e:
                 logger.error("Error creating firmware version: %s", e, exc_info=e)
                 await tx.rollback()
-                return FirmwareVersionResponse(
+                return FirmwareVersionAPIResponse(
                     success=False, message="Error creating version"
                 )
             else:
                 await tx.commit()
-                return FirmwareVersionResponse(
+                return FirmwareVersionAPIResponse(
                     success=True, version=version_response_model
                 )

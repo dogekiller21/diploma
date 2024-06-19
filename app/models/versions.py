@@ -16,3 +16,7 @@ class VersionResponseModel(IDMixin):
 
 class VersionDataModel(VersionCreateModel, IDMixin):
     pass
+
+
+class VersionDeleteModel(IDMixin):
+    pass

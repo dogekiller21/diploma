@@ -1,6 +1,6 @@
 import logging
 
-from app.db.base.storage import BaseStorage
+from app.db.neo4j.base.storage import BaseStorage
 from app.models.block import BlockCreateModel, BlockDataModel
 from app.models.response import BlockControllersResponseModel
 

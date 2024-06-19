@@ -12,12 +12,15 @@
             <div class="card-header">
                 <h3 class="mb-0">Информация о микроконтроллере</h3>
             </div>
-            <div class="card-body">
+            <div class="card-body" id="controllerMainData">
                 <p><strong>Название контроллера:</strong> {{ firmware.controller_name }}</p>
                 <p><strong>Блок:</strong> {{ firmware.block.block_name }} {{  firmware.block.model_name }}</p>
                 <p><strong>Текущая версия прошивки:</strong> {{ firmware.first_version.version }}</p>
                 <p><strong>Дата выпуска текущей версии:</strong> {{ firmware.first_version.release_date }}</p>
-                <a href="{{ url_for('static', path='firmwares/' + firmware.first_version.id|string ) }}" class="btn btn-primary">Скачать</a>
+                <div class="btn-group" role="group" aria-label="Firmware page button group">
+                    <a href="{{ url_for('download_firmware', version_id=firmware.first_version.id|string ) }}" class="btn btn-outline-success">Скачать</a>
+                    <button class="btn btn-outline-primary" data-bs-toggle="modal" data-bs-target="#addVersionModal">Добавить версию</button>
+                </div>
             </div>
         </div>
 
@@ -25,7 +28,7 @@
             <div class="card-header">
                 <h3 class="mb-0">Другие версии</h3>
             </div>
-            <ul class="list-group list-group-flush">
+            <ul class="list-group list-group-flush" id="versionsList">
                 {% for version in firmware.versions %}
                     <li class="list-group-item">
                         <div class="d-flex justify-content-between align-items-center">
@@ -33,7 +36,10 @@
                                 <h5>Версия: {{ version.version }}</h5>
                                 <p>Дата выпуска: {{ version.release_date }}</p>
                             </div>
-                            <a href="{{ url_for('static', path='firmwares/' + version.id|string ) }}" class="btn btn-primary">Скачать</a>
+                            <div class="btn-group" role="group" aria-label="Firmware page button group">
+                                <a href="{{ url_for('download_firmware', version_id=version.id|string ) }}" class="btn btn-outline-success">Скачать</a>
+                                <button class="btn btn-outline-danger delete-version-btn" data-bs-toggle="modal" data-bs-target="#deleteVersionModal" data-version-id="{{ version.id|string }}">Удалить</button>
+                            </div>
                         </div>
                     </li>
                 {% endfor %}
@@ -75,6 +81,25 @@
             </div>
         </div>
     </div>
+
+    <div class="modal fade" id="deleteVersionModal" tabindex="-1" aria-labelledby="deleteVersionModalLabel" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="deleteVersionModalLabel">Подтверждение удаления</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    Вы уверены, что хотите удалить версию?
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Отмена</button>
+                    <button type="button" class="btn btn-danger" id="confirmDeleteVersionBtn">Удалить</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
 {% endblock %}
 
 {% block scripts %}
@@ -83,6 +108,31 @@
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.min.js" integrity="sha384-0pUGZvbkm6XF6gxjEnlmuGrJXVbNuzT9qBBavbLwCsOGabYfZo0T0to5eqruptLy" crossorigin="anonymous"></script>
 
     <script>
+        let versionIdToDelete = null;
+
+        const updateModalButtonsHandlers = () => {
+            document.querySelectorAll('.delete-version-btn').forEach(button => {
+                button.addEventListener('click', function() {
+                    versionIdToDelete = this.getAttribute('data-version-id');
+                });
+            });
+        }
+        const fetchDataFx = async (formAction, requestData) => {
+            return new Promise((resolve, reject) => {
+                fetch(formAction, {
+                    method: 'POST',
+                    body: requestData
+                }).then(response => response.json())
+                    .then(data => {
+                        if (!data.success) {
+                            reject(data.message);
+                        } else {
+                            resolve(data);
+                        }
+                    })
+            })
+        }
+
         const buildModalRequestData = (formData) => {
             const requestData = new FormData();
             requestData.set('file', formData.get('file'));
@@ -138,8 +188,110 @@
                 display_error(error);
                 return;
             }
-            await fetchBlocksAndUpdate();
+            await fetchAndUpdateControllerData();
             display_success();
         }
+
+        const fetchVersionDelete = async (versionId) => {
+            return new Promise((resolve, reject) => {
+                fetch("{{ url_for('delete_version') }}", {
+                    method: 'DELETE',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({id: versionId})
+                }).then(response => {
+                    if (!response.ok) {
+                        reject("Error deleting version with id: " + versionId);
+                    } else {
+                        resolve(response.json());
+                    }
+                })
+
+            })
+        }
+        const updateControllerData = (firmware) => {
+            const controllerMainData = document.getElementById('controllerMainData');
+            const controllerVersionsData = document.getElementById('versionsList');
+
+            controllerMainData.innerHTML =`
+                <p><strong>Название контроллера:</strong> ${firmware.controller_name}</p>
+                <p><strong>Блок:</strong> ${firmware.block.block_name} ${firmware.block.model_name}</p>
+                <p><strong>Текущая версия прошивки:</strong> ${firmware.first_version.version}</p>
+                <p><strong>Дата выпуска текущей версии:</strong> ${firmware.first_version.release_date}</p>
+                <div class="btn-group" role="group" aria-label="Firmware page button group">
+                    <a href="${`{{ url_for('download_firmware', version_id="REPLACE_ID") }}`.replace('REPLACE_ID', firmware.first_version)}" class="btn btn-outline-success">Скачать</a>
+                    <button class="btn btn-outline-primary" data-bs-toggle="modal" data-bs-target="#addVersionModal">Добавить версию</button>
+                </div>
+            `;
+
+            controllerVersionsData.innerHTML = `
+                ${firmware.versions.map(version => `
+            <li class="list-group-item">
+            <div class="d-flex justify-content-between align-items-center">
+            <div>
+            <h5>Версия: ${version.version}</h5>
+            <p>Дата выпуска: ${version.release_date}</p>
+            </div>
+            <div class="btn-group" role="group" aria-label="Firmware page button group">
+            <a href="${`{{ url_for('download_firmware', version_id="REPLACE_ID") }}`.replace('REPLACE_ID', version.id)}" class="btn btn-outline-success">Скачать</a>
+            <button class="btn btn-outline-danger delete-version-btn" data-bs-toggle="modal" data-bs-target="#deleteVersionModal" data-version-id="${version.id}">Удалить</button>
+            </div>
+            </div>
+            </li>
+            `).join('')}
+            `;
+
+            updateModalButtonsHandlers();
+        }
+
+        const fetchAndUpdateControllerData = async () => {
+            try {
+                const response = await fetch(
+                    "{{ url_for('get_firmware_versions') }}?firmware_id={{ firmware.id }}", {
+                        method: 'GET',
+                        headers: {
+                            'Content-Type': 'application/json',
+                        },
+                    })
+                const data = await response.json();
+                updateControllerData(data);
+
+            } catch (error) {
+                console.error("Error fetching controller data:", error);
+            }
+
+
+        }
+
+        document.addEventListener('DOMContentLoaded', function() {
+
+            document.getElementById('submitAddVersionBtn').addEventListener('click', modalSubmitEvent);
+
+            updateModalButtonsHandlers();
+
+            document.getElementById('confirmDeleteVersionBtn').addEventListener('click', async function() {
+                if (versionIdToDelete) {
+                    try {
+                        await fetchVersionDelete(versionIdToDelete);
+                    }
+                    catch (error) {
+                        console.error('Error:', error);
+                        alert('Ошибка при удалении версии. Попробуйте ещё раз.');
+                        return;
+                    }
+                    const deleteModal = document.getElementById('deleteVersionModal');
+                    const modal = bootstrap.Modal.getInstance(deleteModal);
+                    modal.hide();
+                    $(document.body).removeClass("modal-open");
+                    $(".modal-backdrop").remove();
+                    await fetchAndUpdateControllerData();
+
+                }
+            });
+
+
+        });
+
     </script>
 {% endblock %}

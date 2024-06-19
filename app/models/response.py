@@ -4,7 +4,7 @@ from app.models.block import BlockDataModel
 from app.models.controller import (
     BlockControllerResponseModel,
     ControllerDataModel,
-    SingleBlockControllerResponseModel,
+    SingleControllerDataModel,
 )
 from app.models.versions import VersionResponseModel
 
@@ -31,16 +31,15 @@ class ControllerVersionsResponseModel(BaseModel):
     controller: ControllerResponseModel
 
 
-class BaseResponse(BaseModel):
+class BaseAPIResponse(BaseModel):
     success: bool
     message: str | None = None
 
 
-class FirmwareResponse(BaseResponse):
+class FirmwareAPIResponse(BaseAPIResponse):
+    firmware: SingleControllerDataModel | None = None
 
-    firmware: SingleBlockControllerResponseModel | None = None
 
-
-class FirmwareVersionResponse(BaseResponse):
+class FirmwareVersionAPIResponse(BaseAPIResponse):
 
     version: VersionResponseModel | None = None

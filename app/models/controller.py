@@ -21,7 +21,11 @@ class BlockControllerResponseModel(ControllerDataModel):
     first_version: VersionResponseModel
 
 
-class SingleBlockControllerResponseModel(ControllerDataModel):
+class SingleControllerDataModel(ControllerDataModel):
     first_version: VersionResponseModel
     versions: list[VersionResponseModel]
     block: BlockDataModel
+
+
+class ControllerDeleteModel(IDMixin):
+    pass

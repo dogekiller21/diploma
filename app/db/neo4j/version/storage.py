@@ -1,12 +1,5 @@
-from uuid import UUID
-
-from app.db.base.storage import BaseStorage
-from app.models.controller import (
-    ControllerCreateModel,
-    ControllerDataModel,
-    SingleBlockControllerResponseModel,
-)
-from app.models.response import BlockControllerResponseModel
+from app.db.neo4j.base.storage import BaseStorage
+from app.models.controller import SingleControllerDataModel
 from app.models.versions import VersionCreateModel, VersionDataModel
 
 
@@ -40,9 +33,24 @@ class VersionStorage(BaseStorage):
             return None
         return VersionDataModel.model_validate(data[0].get("vv"))
 
+    async def delete_version_by_id(self, version_id: str) -> int:
+        query = """
+            MATCH (vv:Version)
+            WHERE vv.id = $version_id
+            
+            DETACH DELETE vv
+            RETURN count(vv) as items_deleted
+        """
+        result = await self.make_request(
+            query=query,
+            version_id=version_id,
+        )
+        data = await result.single()
+        return data.data()["items_deleted"]
+
     async def get_controller_versions_response(
         self, limit: int, offset: int, controller_id: str | None = None
-    ) -> SingleBlockControllerResponseModel | None:
+    ) -> SingleControllerDataModel | None:
         """
         [
             {
@@ -103,4 +111,4 @@ class VersionStorage(BaseStorage):
         data = await result.single()
         if not data:
             return None
-        return SingleBlockControllerResponseModel.model_validate(data.data())
+        return SingleControllerDataModel.model_validate(data.data())
