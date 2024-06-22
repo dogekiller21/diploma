@@ -6,6 +6,7 @@ from fastapi.params import File, Form
 from app.db.neo4j.controller.storage import ControllerStorage
 from app.db.neo4j.links.storage import LinkStorage
 from app.db.neo4j.session import build_storage_dependency
+from app.dependencies.auth import get_admin_user, get_current_user
 from app.models.block import ModalBlockCreateModel
 from app.models.controller import (
     BlockControllerResponseModel,
@@ -19,7 +20,7 @@ from app.models.versions import VersionCreateModel
 router = APIRouter(prefix="/firmware", tags=["firmware"])
 
 
-@router.post("/full", name="add_firmware")
+@router.post("/full", name="add_firmware", dependencies=[Depends(get_admin_user)])
 async def add_firmware(
     controller: str = Form(...),
     block: str = Form(...),
@@ -38,7 +39,7 @@ async def add_firmware(
     )
 
 
-@router.post("/")
+@router.post("/", dependencies=[Depends(get_admin_user)])
 async def create_firmware(
     data: ControllerCreateModel,
     storage: ControllerStorage = Depends(build_storage_dependency(ControllerStorage)),
@@ -46,7 +47,7 @@ async def create_firmware(
     return await storage.create_controller_object(data=data)
 
 
-@router.get("/")
+@router.get("/", dependencies=[Depends(get_current_user)])
 async def get_firmware(
     offset: int = 0,
     limit: int = 5,
@@ -55,7 +56,7 @@ async def get_firmware(
     return await storage.get_controllers_response(limit=limit, offset=offset)
 
 
-@router.delete("/", name="delete_firmware")
+@router.delete("/", name="delete_firmware", dependencies=[Depends(get_admin_user)])
 async def delete_firmware(
     data: ControllerDeleteModel,
     storage: ControllerStorage = Depends(build_storage_dependency(ControllerStorage)),

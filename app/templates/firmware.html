@@ -19,7 +19,9 @@
                 <p><strong>Дата выпуска текущей версии:</strong> {{ firmware.first_version.release_date }}</p>
                 <div class="btn-group" role="group" aria-label="Firmware page button group">
                     <a href="{{ url_for('download_firmware', version_id=firmware.first_version.id|string ) }}" class="btn btn-outline-success">Скачать</a>
-                    <button class="btn btn-outline-primary" data-bs-toggle="modal" data-bs-target="#addVersionModal">Добавить версию</button>
+                    {% if user.scope == 'admin' %}
+                        <button class="btn btn-outline-primary" data-bs-toggle="modal" data-bs-target="#addVersionModal">Добавить версию</button>
+                    {% endif %}
                 </div>
             </div>
         </div>
@@ -38,7 +40,9 @@
                             </div>
                             <div class="btn-group" role="group" aria-label="Firmware page button group">
                                 <a href="{{ url_for('download_firmware', version_id=version.id|string ) }}" class="btn btn-outline-success">Скачать</a>
-                                <button class="btn btn-outline-danger delete-version-btn" data-bs-toggle="modal" data-bs-target="#deleteVersionModal" data-version-id="{{ version.id|string }}">Удалить</button>
+                                {% if user.scope == 'admin' %}
+                                    <button class="btn btn-outline-danger delete-version-btn" data-bs-toggle="modal" data-bs-target="#deleteVersionModal" data-version-id="{{ version.id|string }}">Удалить</button>
+                                {% endif %}
                             </div>
                         </div>
                     </li>
@@ -46,60 +50,60 @@
             </ul>
         </div>
     </div>
-
-    <div class="modal fade" id="addVersionModal" tabindex="-1" aria-labelledby="addVersionLabel" aria-hidden="true">
-        <div class="modal-dialog">
-            <div class="modal-content">
-                <div class="modal-header">
-                    <h5 class="modal-title" id="addVersionLabel">Добавление версии</h5>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-                </div>
-                <div class="modal-body">
-                    <form id="addVersionForm" method="post" action="{{ url_for('add_firmware_version') }}" enctype="multipart/form-data">
-                        <div class="mb-3">
-                            <label for="versionInput" class="form-label">Версия прошивки</label>
-                            <input type="text" class="form-control" id="versionInput" name="version" placeholder="0.1.1b">
-                        </div>
-                        <div class="mb-3" id=modalDatetimePicker>
-                            <label for="releaseDateInput" class="form-label">Дата выпуска</label>
-                            <input type="date" class="form-control" id="releaseDateInput" name="release_date" value="2002-01-01">
-                        </div>
-                        <div class="mb-3">
-                            <label for="fileInput" class="form-label">Файл прошивки</label>
-                            <input type="file" class="form-control" id="fileInput" name="file">
-                        </div>
-                        <div id="formErrorMessage" class="alert alert-danger" role="alert" style="display: none;"></div>
-                    </form>
-                </div>
-                <div class="modal-footer">
-                    <span id="submitAddVersionLoading" class="spinner-border spinner-border-sm" role="status" aria-hidden="true" style="display: none;"></span>
-                    <button type="button" class="btn btn-primary" id="submitAddVersionBtn">
-                        <span id="submitAddVersionBtnText">Добавить</span>
-                    </button>
-                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Закрыть</button>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <div class="modal fade" id="deleteVersionModal" tabindex="-1" aria-labelledby="deleteVersionModalLabel" aria-hidden="true">
-        <div class="modal-dialog">
-            <div class="modal-content">
-                <div class="modal-header">
-                    <h5 class="modal-title" id="deleteVersionModalLabel">Подтверждение удаления</h5>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-                </div>
-                <div class="modal-body">
-                    Вы уверены, что хотите удалить версию?
-                </div>
-                <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Отмена</button>
-                    <button type="button" class="btn btn-danger" id="confirmDeleteVersionBtn">Удалить</button>
+    {% if user.scope == 'admin' %}
+        <div class="modal fade" id="addVersionModal" tabindex="-1" aria-labelledby="addVersionLabel" aria-hidden="true">
+            <div class="modal-dialog">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title" id="addVersionLabel">Добавление версии</h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                    </div>
+                    <div class="modal-body">
+                        <form id="addVersionForm" method="post" action="{{ url_for('add_firmware_version') }}" enctype="multipart/form-data">
+                            <div class="mb-3">
+                                <label for="versionInput" class="form-label">Версия прошивки</label>
+                                <input type="text" class="form-control" id="versionInput" name="version" placeholder="0.1.1b">
+                            </div>
+                            <div class="mb-3" id=modalDatetimePicker>
+                                <label for="releaseDateInput" class="form-label">Дата выпуска</label>
+                                <input type="date" class="form-control" id="releaseDateInput" name="release_date" value="2002-01-01">
+                            </div>
+                            <div class="mb-3">
+                                <label for="fileInput" class="form-label">Файл прошивки</label>
+                                <input type="file" class="form-control" id="fileInput" name="file">
+                            </div>
+                            <div id="formErrorMessage" class="alert alert-danger" role="alert" style="display: none;"></div>
+                        </form>
+                    </div>
+                    <div class="modal-footer">
+                        <span id="submitAddVersionLoading" class="spinner-border spinner-border-sm" role="status" aria-hidden="true" style="display: none;"></span>
+                        <button type="button" class="btn btn-primary" id="submitAddVersionBtn">
+                            <span id="submitAddVersionBtnText">Добавить</span>
+                        </button>
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Закрыть</button>
+                    </div>
                 </div>
             </div>
         </div>
-    </div>
 
+        <div class="modal fade" id="deleteVersionModal" tabindex="-1" aria-labelledby="deleteVersionModalLabel" aria-hidden="true">
+            <div class="modal-dialog">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title" id="deleteVersionModalLabel">Подтверждение удаления</h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                    </div>
+                    <div class="modal-body">
+                        Вы уверены, что хотите удалить версию?
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Отмена</button>
+                        <button type="button" class="btn btn-danger" id="confirmDeleteVersionBtn">Удалить</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    {% endif %}
 {% endblock %}
 
 {% block scripts %}
@@ -108,113 +112,115 @@
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.min.js" integrity="sha384-0pUGZvbkm6XF6gxjEnlmuGrJXVbNuzT9qBBavbLwCsOGabYfZo0T0to5eqruptLy" crossorigin="anonymous"></script>
 
     <script>
-        let versionIdToDelete = null;
-
-        const updateModalButtonsHandlers = () => {
-            document.querySelectorAll('.delete-version-btn').forEach(button => {
-                button.addEventListener('click', function() {
-                    versionIdToDelete = this.getAttribute('data-version-id');
+        {% if user.scope == 'admin' %}
+            let versionIdToDelete = null;
+        {% endif %}
+        {% if user.scope == 'admin' %}
+            const updateModalButtonsHandlers = () => {
+                document.querySelectorAll('.delete-version-btn').forEach(button => {
+                    button.addEventListener('click', function() {
+                        versionIdToDelete = this.getAttribute('data-version-id');
+                    });
                 });
-            });
-        }
-        const fetchDataFx = async (formAction, requestData) => {
-            return new Promise((resolve, reject) => {
-                fetch(formAction, {
-                    method: 'POST',
-                    body: requestData
-                }).then(response => response.json())
-                    .then(data => {
-                        if (!data.success) {
-                            reject(data.message);
+            }
+            const fetchDataFx = async (formAction, requestData) => {
+                return new Promise((resolve, reject) => {
+                    fetch(formAction, {
+                        method: 'POST',
+                        body: requestData
+                    }).then(response => response.json())
+                        .then(data => {
+                            if (!data.success) {
+                                reject(data.message);
+                            } else {
+                                resolve(data);
+                            }
+                        })
+                })
+            }
+
+            const buildModalRequestData = (formData) => {
+                const requestData = new FormData();
+                requestData.set('file', formData.get('file'));
+                requestData.set('version', JSON.stringify(
+                    {version: formData.get('version'), release_date: formData.get('release_date')})
+                )
+                requestData.set('firmware_id', "{{ firmware.id }}")
+                return requestData;
+            }
+            const modalSubmitEvent = async (event) => {
+                let form = document.getElementById('addVersionForm');
+                let submitButton = document.getElementById('submitAddVersionBtn');
+                let loadingIcon = document.getElementById('submitAddVersionLoading');
+                let errorMessage = document.getElementById('formErrorMessage');
+
+                function reset_loading_icon() {
+                    loadingIcon.className = 'spinner-border spinner-border-sm';
+                    loadingIcon.style["color"] = null;
+                    loadingIcon.style.display = 'none';
+                }
+                function display_loading() {
+                    errorMessage.style.display = 'none';
+                    errorMessage.innerText = '';
+
+                    submitButton.disabled = true;
+                    loadingIcon.className = 'spinner-border spinner-border-sm';
+                    loadingIcon.style.display = 'inline-block';
+                }
+                function display_error(message) {
+                    errorMessage.style.display = 'block';
+                    errorMessage.innerText = message || 'Ошибка при обработке запроса. Попробуйте ещё раз.';
+                    loadingIcon.className = 'bi bi-x-circle';
+                    submitButton.disabled = false;
+                    reset_loading_icon();
+                }
+                function display_success() {
+                    loadingIcon.className = "fa-regular fa-circle-check";
+                    loadingIcon.style["color"] = "#63E6BE";
+                    submitButton.disabled = false;
+                }
+
+                reset_loading_icon();
+                display_loading();
+
+                const formData = new FormData(form);
+
+                const requestData = buildModalRequestData(formData);
+
+                try {
+                    await fetchDataFx(form.action, requestData);
+                }
+                catch (error) {
+                    display_error(error);
+                    return;
+                }
+                await fetchAndUpdateControllerData();
+                display_success();
+            }
+
+            const fetchVersionDelete = async (versionId) => {
+                return new Promise((resolve, reject) => {
+                    fetch("{{ url_for('delete_version') }}", {
+                        method: 'DELETE',
+                        headers: {
+                            'Content-Type': 'application/json',
+                        },
+                        body: JSON.stringify({id: versionId})
+                    }).then(response => {
+                        if (!response.ok) {
+                            reject("Error deleting version with id: " + versionId);
                         } else {
-                            resolve(data);
+                            resolve(response.json());
                         }
                     })
-            })
-        }
 
-        const buildModalRequestData = (formData) => {
-            const requestData = new FormData();
-            requestData.set('file', formData.get('file'));
-            requestData.set('version', JSON.stringify(
-                {version: formData.get('version'), release_date: formData.get('release_date')})
-            )
-            requestData.set('firmware_id', "{{ firmware.id }}")
-            return requestData;
-        }
-        const modalSubmitEvent = async (event) => {
-            let form = document.getElementById('addVersionForm');
-            let submitButton = document.getElementById('submitAddVersionBtn');
-            let loadingIcon = document.getElementById('submitAddVersionLoading');
-            let errorMessage = document.getElementById('formErrorMessage');
-
-            function reset_loading_icon() {
-                loadingIcon.className = 'spinner-border spinner-border-sm';
-                loadingIcon.style["color"] = null;
-                loadingIcon.style.display = 'none';
-            }
-            function display_loading() {
-                errorMessage.style.display = 'none';
-                errorMessage.innerText = '';
-
-                submitButton.disabled = true;
-                loadingIcon.className = 'spinner-border spinner-border-sm';
-                loadingIcon.style.display = 'inline-block';
-            }
-            function display_error(message) {
-                errorMessage.style.display = 'block';
-                errorMessage.innerText = message || 'Ошибка при обработке запроса. Попробуйте ещё раз.';
-                loadingIcon.className = 'bi bi-x-circle';
-                submitButton.disabled = false;
-                reset_loading_icon();
-            }
-            function display_success() {
-                loadingIcon.className = "fa-regular fa-circle-check";
-                loadingIcon.style["color"] = "#63E6BE";
-                submitButton.disabled = false;
-            }
-
-            reset_loading_icon();
-            display_loading();
-
-            const formData = new FormData(form);
-
-            const requestData = buildModalRequestData(formData);
-
-            try {
-                await fetchDataFx(form.action, requestData);
-            }
-            catch (error) {
-                display_error(error);
-                return;
-            }
-            await fetchAndUpdateControllerData();
-            display_success();
-        }
-
-        const fetchVersionDelete = async (versionId) => {
-            return new Promise((resolve, reject) => {
-                fetch("{{ url_for('delete_version') }}", {
-                    method: 'DELETE',
-                    headers: {
-                        'Content-Type': 'application/json',
-                    },
-                    body: JSON.stringify({id: versionId})
-                }).then(response => {
-                    if (!response.ok) {
-                        reject("Error deleting version with id: " + versionId);
-                    } else {
-                        resolve(response.json());
-                    }
                 })
+            }
+            const updateControllerData = (firmware) => {
+                const controllerMainData = document.getElementById('controllerMainData');
+                const controllerVersionsData = document.getElementById('versionsList');
 
-            })
-        }
-        const updateControllerData = (firmware) => {
-            const controllerMainData = document.getElementById('controllerMainData');
-            const controllerVersionsData = document.getElementById('versionsList');
-
-            controllerMainData.innerHTML =`
+                controllerMainData.innerHTML =`
                 <p><strong>Название контроллера:</strong> ${firmware.controller_name}</p>
                 <p><strong>Блок:</strong> ${firmware.block.block_name} ${firmware.block.model_name}</p>
                 <p><strong>Текущая версия прошивки:</strong> ${firmware.first_version.version}</p>
@@ -225,70 +231,70 @@
                 </div>
             `;
 
-            controllerVersionsData.innerHTML = `
+                controllerVersionsData.innerHTML = `
                 ${firmware.versions.map(version => `
-            <li class="list-group-item">
-            <div class="d-flex justify-content-between align-items-center">
-            <div>
-            <h5>Версия: ${version.version}</h5>
-            <p>Дата выпуска: ${version.release_date}</p>
-            </div>
-            <div class="btn-group" role="group" aria-label="Firmware page button group">
-            <a href="${`{{ url_for('download_firmware', version_id="REPLACE_ID") }}`.replace('REPLACE_ID', version.id)}" class="btn btn-outline-success">Скачать</a>
-            <button class="btn btn-outline-danger delete-version-btn" data-bs-toggle="modal" data-bs-target="#deleteVersionModal" data-version-id="${version.id}">Удалить</button>
-            </div>
-            </div>
-            </li>
-            `).join('')}
+                <li class="list-group-item">
+                <div class="d-flex justify-content-between align-items-center">
+                <div>
+                <h5>Версия: ${version.version}</h5>
+                <p>Дата выпуска: ${version.release_date}</p>
+                </div>
+                <div class="btn-group" role="group" aria-label="Firmware page button group">
+                <a href="${`{{ url_for('download_firmware', version_id="REPLACE_ID") }}`.replace('REPLACE_ID', version.id)}" class="btn btn-outline-success">Скачать</a>
+                <button class="btn btn-outline-danger delete-version-btn" data-bs-toggle="modal" data-bs-target="#deleteVersionModal" data-version-id="${version.id}">Удалить</button>
+                </div>
+                </div>
+                </li>
+                `).join('')}
             `;
 
-            updateModalButtonsHandlers();
-        }
-
-        const fetchAndUpdateControllerData = async () => {
-            try {
-                const response = await fetch(
-                    "{{ url_for('get_firmware_versions') }}?firmware_id={{ firmware.id }}", {
-                        method: 'GET',
-                        headers: {
-                            'Content-Type': 'application/json',
-                        },
-                    })
-                const data = await response.json();
-                updateControllerData(data);
-
-            } catch (error) {
-                console.error("Error fetching controller data:", error);
+                updateModalButtonsHandlers();
             }
 
+            const fetchAndUpdateControllerData = async () => {
+                try {
+                    const response = await fetch(
+                        "{{ url_for('get_firmware_versions') }}?firmware_id={{ firmware.id }}", {
+                            method: 'GET',
+                            headers: {
+                                'Content-Type': 'application/json',
+                            },
+                        })
+                    const data = await response.json();
+                    updateControllerData(data);
 
-        }
-
-        document.addEventListener('DOMContentLoaded', function() {
-
-            document.getElementById('submitAddVersionBtn').addEventListener('click', modalSubmitEvent);
-
-            updateModalButtonsHandlers();
-
-            document.getElementById('confirmDeleteVersionBtn').addEventListener('click', async function() {
-                if (versionIdToDelete) {
-                    try {
-                        await fetchVersionDelete(versionIdToDelete);
-                    }
-                    catch (error) {
-                        console.error('Error:', error);
-                        alert('Ошибка при удалении версии. Попробуйте ещё раз.');
-                        return;
-                    }
-                    const deleteModal = document.getElementById('deleteVersionModal');
-                    const modal = bootstrap.Modal.getInstance(deleteModal);
-                    modal.hide();
-                    $(document.body).removeClass("modal-open");
-                    $(".modal-backdrop").remove();
-                    await fetchAndUpdateControllerData();
-
+                } catch (error) {
+                    console.error("Error fetching controller data:", error);
                 }
-            });
+
+
+            }
+        {% endif %}
+        document.addEventListener('DOMContentLoaded', function() {
+            {% if user.scope == 'admin' %}
+                document.getElementById('submitAddVersionBtn').addEventListener('click', modalSubmitEvent);
+
+                updateModalButtonsHandlers();
+                document.getElementById('confirmDeleteVersionBtn').addEventListener('click', async function() {
+                    if (versionIdToDelete) {
+                        try {
+                            await fetchVersionDelete(versionIdToDelete);
+                        }
+                        catch (error) {
+                            console.error('Error:', error);
+                            alert('Ошибка при удалении версии. Попробуйте ещё раз.');
+                            return;
+                        }
+                        const deleteModal = document.getElementById('deleteVersionModal');
+                        const modal = bootstrap.Modal.getInstance(deleteModal);
+                        modal.hide();
+                        $(document.body).removeClass("modal-open");
+                        $(".modal-backdrop").remove();
+                        await fetchAndUpdateControllerData();
+
+                    }
+                });
+            {% endif %}
 
 
         });

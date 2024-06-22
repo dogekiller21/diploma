@@ -32,10 +32,10 @@
                             <a class="nav-link {% if is_main_page %}active{% endif %}" href="{{ url_for('main_page') }}" {% if is_main_page %}aria-current="page"{% endif %}>Главная</a>
                         </li>
                         <li class="nav-item">
-                            <a class="nav-link {% if is_firmwares_page %}active{% endif %}" href="{{ url_for('firmwares_page') }}" {% if is_firmwares_page %}aria-current="page"{% endif %}>Прошивки</a>
+                            <a class="nav-link {% if is_cars_page %}active{% endif %}" href="{{ url_for('cars_page') }}" {% if is_cars_page %}aria-current="page"{% endif %}>Авто</a>
                         </li>
                         <li class="nav-item">
-                            <a class="nav-link {% if is_cars_page %}active{% endif %}" href="{{ url_for('cars_page') }}" {% if is_cars_page %}aria-current="page"{% endif %}>Авто</a>
+                            <a class="nav-link {% if is_firmwares_page %}active{% endif %}" href="{{ url_for('firmwares_page') }}" {% if is_firmwares_page %}aria-current="page"{% endif %}>Прошивки</a>
                         </li>
                         <li class="nav-item">
                             <a class="nav-link {% if is_about_page %}active{% endif %}" href="{{ url_for('about_page') }}" {% if is_about_page %}aria-current="page"{% endif %}>Контакты</a>

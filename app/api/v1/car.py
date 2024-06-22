@@ -8,6 +8,12 @@ from starlette.requests import Request
 from app.db.neo4j.car.storage import CarStorage
 from app.db.neo4j.links.storage import LinkStorage
 from app.db.neo4j.session import build_storage_dependency
+from app.dependencies.auth import (
+    get_admin_user,
+    get_admin_user_front,
+    get_current_user,
+    get_current_user_front,
+)
 from app.models.car import CarCreateModel, CarDataModel, CarDeleteModel
 from app.models.controller import ControllerDataModel
 from app.models.response import CarBlockResponseModel
@@ -17,7 +23,7 @@ router = APIRouter(prefix="/car", tags=["car"])
 logger = logging.getLogger(__name__)
 
 
-@router.post("/", name="add_car")
+@router.post("/", name="add_car", dependencies=[Depends(get_admin_user)])
 async def create_car(
     data: CarCreateModel,
     storage: CarStorage = Depends(build_storage_dependency(CarStorage)),
@@ -32,7 +38,7 @@ async def create_car(
         )
 
 
-@router.get("/firmware")
+@router.get("/firmware", dependencies=[Depends(get_current_user)])
 async def get_car_firmware(
     car_id: str,
     storage: LinkStorage = Depends(build_storage_dependency(LinkStorage)),
@@ -44,7 +50,7 @@ async def get_car_firmware(
         return []
 
 
-@router.get("/")
+@router.get("/", dependencies=[Depends(get_current_user)])
 async def get_car_by_numberplate(
     numberplate: str,
     storage: CarStorage = Depends(build_storage_dependency(CarStorage)),
@@ -56,7 +62,7 @@ async def get_car_by_numberplate(
         return None
 
 
-@router.delete("/", name="delete_car")
+@router.delete("/", name="delete_car", dependencies=[Depends(get_admin_user)])
 async def delete_car_by_id(
     data: CarDeleteModel,
     storage: CarStorage = Depends(build_storage_dependency(CarStorage)),
@@ -68,7 +74,7 @@ async def delete_car_by_id(
         return 0
 
 
-@router.get("/full", name="get_cars_full")
+@router.get("/full", name="get_cars_full", dependencies=[Depends(get_current_user)])
 async def get_cars_full(
     block: str | None = None,
     car: str | None = None,
@@ -80,4 +86,17 @@ async def get_cars_full(
         )
     except Exception as e:
         logger.error("Error getting cars full: %s", e, exc_info=e)
+        return []
+
+
+@router.get("/search", name="get_cars", dependencies=[Depends(get_current_user)])
+async def get_cars_full(
+    query: str | None = None,
+    storage: CarStorage = Depends(build_storage_dependency(CarStorage)),
+) -> list[CarDataModel]:
+    print(query)
+    try:
+        return await storage.search_cars(limit=15, offset=0, s_query=query)
+    except Exception as e:
+        logger.error("Error getting cars: %s", e, exc_info=e)
         return []

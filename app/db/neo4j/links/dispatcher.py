@@ -37,7 +37,8 @@ class LinkDispatcher:
         query = """
             MATCH (cc:Car) WHERE cc.id = $car_id
             MATCH (bb:Block) WHERE bb.id = $block_id
-            CREATE (cc)-[r:LINKED_CAR]->(bb)
+            MERGE (cc)-[r:LINKED_CAR]->(bb)
+            ON CREATE SET r.created_at = timestamp()
             RETURN count(r) as links_count
         """
 
@@ -49,7 +50,8 @@ class LinkDispatcher:
         query = """
             MATCH (cc:Car) WHERE cc.id = $car_id
             MATCH (bb:Block) WHERE bb.id = $block_id
-            DELETE (cc)-[r:LINKED_CAR]->(bb)
+            MATCH (cc)-[r:LINKED_CAR]->(bb)
+            DELETE r
             RETURN count(r) as links_count
         """
 

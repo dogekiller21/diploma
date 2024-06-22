@@ -93,46 +93,74 @@ class CarStorage(BaseStorage):
         block_id: str | None = None,
         car_id: str | None = None,
     ) -> list[CarBlockResponseModel]:
+        if not block_id:
+            block_id = None
+        if not car_id:
+            car_id = None
+
         query = """
         MATCH (car:Car)
-        """
-        if car_id:
-            query += """
-            WHERE car.id = $car_id
-            """
-        query += """
+        WHERE ($car_id IS NULL OR car.id = $car_id)
         OPTIONAL MATCH (car)-[:LINKED_CAR]->(bb:Block)
-        """
-        if block_id:
-            query += """
-            WHERE bb.id = $block_id
-            """
-        query += """
         OPTIONAL MATCH (cc:Controller)-[:LINKED_BLOCK]->(bb)
         WITH car, bb, COUNT(DISTINCT cc) as firmwares_count
-        WITH car, COLLECT(DISTINCT {
-            id: bb.id,
-            block_name: bb.block_name,
-            model_name: bb.model_name,
-            firmwares_count: firmwares_count
-        }) as blocks
+        WITH car, bb, 
+             CASE 
+                 WHEN bb IS NOT NULL THEN {
+                     id: bb.id,
+                     block_name: bb.block_name,
+                     model_name: bb.model_name,
+                     firmwares_count: firmwares_count
+                 }
+                 ELSE NULL
+             END AS block_info
+        WITH car, COLLECT(DISTINCT block_info) AS blocks
+        WHERE ($block_id IS NULL OR any(b in blocks WHERE b.id = $block_id))
         RETURN
-            car.id as id,
-            car.numberplate as numberplate,
-            car.brand as brand,
-            car.model as model,
-            car.info as info,
-            CASE WHEN SIZE(blocks) = 1 AND blocks[0].id IS NULL THEN [] ELSE blocks END as blocks
+            car.id AS id,
+            car.numberplate AS numberplate,
+            car.brand AS brand,
+            car.model AS model,
+            car.info AS info,
+            [b IN blocks WHERE b IS NOT NULL] AS blocks
         SKIP $offset
         LIMIT $limit
-
         """
-
         result = await self.make_request(
             query=query, limit=limit, offset=offset, block_id=block_id, car_id=car_id
         )
         data = await result.data()
-        print(f"{data=}")
         if not data:
             return []
         return [CarBlockResponseModel.model_validate(item) for item in data]
+
+    async def search_cars(
+        self, s_query: str | None = None, limit: int = 10, offset: int = 0
+    ) -> list[CarDataModel]:
+        query = """
+        MATCH (car:Car)
+        """
+        if s_query is not None:
+            query += """
+                WHERE
+                car.numberplate CONTAINS $s_query
+                OR car.brand CONTAINS $s_query
+                OR car.model CONTAINS $s_query
+            """
+
+        query += """
+        RETURN
+            car.id as id,
+            car.numberplate as numberplate,
+            car.brand as brand,
+            car.model as model
+        SKIP $offset
+        LIMIT $limit
+        """
+        result = await self.make_request(
+            query=query, s_query=s_query, limit=limit, offset=offset
+        )
+        data = await result.data()
+        if not data:
+            return []
+        return [CarDataModel.model_validate(item) for item in data]

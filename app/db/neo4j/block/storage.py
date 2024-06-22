@@ -121,57 +121,40 @@ class BlockStorage(BaseStorage):
         :param block_id: str
         :return: list[BlockControllersResponseModel]
         """
+        if not block_id:
+            block_id = None
+
+        if not car_id:
+            car_id = None
 
         db_query = """
-            MATCH (cc:Controller)-[:LINKED_BLOCK]->(bb:Block)
-            OPTIONAL MATCH (car:Car)-[:LINKED_CAR]->(bb:Block)
-            MATCH (vv:Version)<-[:LINKED_VERSION]-(cc:Controller)
-        """
-        if block_id:
-            db_query += f"""
-             WHERE
-             bb.id = $block_id
-        """
-        if car_id:
-            db_query += f"""
-             WHERE
-             car.id = $car_id
-        """
+MATCH (bb:Block)
+WHERE ($block_id IS NULL OR bb.id = $block_id)
+OPTIONAL MATCH (car:Car)-[:LINKED_CAR]->(bb)
+WHERE ($car_id IS NULL OR car.id = $car_id)
+WITH bb, car
+WHERE $car_id IS NULL OR car IS NOT NULL
+MATCH (cc:Controller)-[:LINKED_BLOCK]->(bb)
+MATCH (vv:Version)<-[:LINKED_VERSION]-(cc)
+WITH bb, cc, bb.id AS id, bb.block_name AS block_name, bb.model_name AS model_name, collect(DISTINCT vv) AS versions, count(DISTINCT car) AS cars_count
+UNWIND versions AS v
+WITH id, block_name, model_name, cc, v, cars_count
+ORDER BY v.release_date DESC
+WITH id, block_name, model_name, cc, collect(v)[0] AS first_version, cars_count
+WITH id, block_name, model_name, cars_count, collect(DISTINCT {
+    id: cc.id,
+    controller_name: cc.controller_name,
+    first_version: {
+        id: first_version.id,
+        version: first_version.version,
+        release_date: first_version.release_date
+    }
+}) AS firmwares
+RETURN id, block_name, model_name, firmwares, cars_count
+SKIP $offset
+LIMIT $limit
 
-        # noinspection SqlNoDataSourceInspection
-        db_query += """
-        WITH cc, bb, car, vv,
-             bb.id as id,
-             bb.block_name as block_name,
-             bb.model_name as model_name
-        WITH id, block_name, model_name, cc,
-             collect(DISTINCT vv) as versions,
-             count(DISTINCT car) as cars_count
-        UNWIND versions AS v
-        WITH id, block_name, model_name, cc, v, cars_count
-        ORDER BY v.release_date DESC
-        WITH id, block_name, model_name, cc, collect(v)[0] AS first_version, cars_count
-        WITH id, block_name, model_name, 
-             collect(DISTINCT {
-                 id: cc.id,
-                 controller_name: cc.controller_name,
-                 first_version: {
-                     id: first_version.id,
-                     version: first_version.version,
-                     release_date: first_version.release_date
-                 }
-             }) as firmwares,
-             cars_count
-        SKIP $offset
-        LIMIT $limit
-        RETURN 
-            id,
-            block_name,
-            model_name,
-            firmwares,
-            cars_count
         """
-
         result = await self.make_request(
             query=db_query, limit=limit, offset=offset, block_id=block_id, car_id=car_id
         )

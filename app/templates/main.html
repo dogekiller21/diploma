@@ -1,11 +1,36 @@
 {% extends "base.html" %}
 
 {% block content %}
-    <div class="jumbotron">
-        <h1 class="display-4">Добро пожаловать!</h1>
-        <p class="lead">Ваш единый центр поиска прошивки для ваших встраиваемых устройств.</p>
-        <hr class="my-4">
-        <p>Начните поиск нужной прошивочки.</p>
-        <a class="btn btn-primary btn-lg" href="{{ url_for('firmwares_page') }}" role="button">Искать прошивочки</a>
+    <div class="container mt-5">
+        <div class="row">
+            <div class="col-md-12">
+                <div class="jumbotron text-center">
+                    <h1 class="display-4">Добро пожаловать в Firmware Hub!</h1>
+                    <p class="lead">Единая база прошивок для блоков автомобилей.</p>
+                    <hr class="my-4">
+                    <p>Ищите прошивки для блоков и их контроллеров или просматривайте автомобили с доступными блоками.</p>
+                </div>
+            </div>
+        </div>
+        <div class="row mt-4">
+            <div class="col-md-6">
+                <div class="card text-center">
+                    <div class="card-body">
+                        <h5 class="card-title">Блоки и прошивки</h5>
+                        <p class="card-text">Ищите прошивки для блоков и контроллеров.</p>
+                        <a class="btn btn-primary btn-lg" href="{{ url_for('firmwares_page') }}" role="button">Искать прошивки</a>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-6">
+                <div class="card text-center">
+                    <div class="card-body">
+                        <h5 class="card-title">Автомобили и блоки</h5>
+                        <p class="card-text">Просматривайте автомобили с доступными блоками.</p>
+                        <a class="btn btn-secondary btn-lg" href="{{ url_for('cars_page') }}" role="button">Просмотр авто</a>
+                    </div>
+                </div>
+            </div>
+        </div>
     </div>
 {% endblock %}

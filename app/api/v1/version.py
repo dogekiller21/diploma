@@ -10,6 +10,11 @@ from fastapi.responses import StreamingResponse
 from app.db.neo4j.links.storage import LinkStorage
 from app.db.neo4j.session import build_storage_dependency
 from app.db.neo4j.version.storage import VersionStorage
+from app.dependencies.auth import (
+    get_admin_user,
+    get_current_user,
+    get_current_user_front,
+)
 from app.models.controller import SingleControllerDataModel
 from app.models.response import FirmwareVersionAPIResponse
 from app.models.versions import VersionCreateModel, VersionDataModel, VersionDeleteModel
@@ -17,7 +22,11 @@ from app.models.versions import VersionCreateModel, VersionDataModel, VersionDel
 router = APIRouter(prefix="/version", tags=["version"])
 
 
-@router.get("/download/{version_id}", name="download_firmware")
+@router.get(
+    "/download/{version_id}",
+    name="download_firmware",
+    dependencies=[Depends(get_current_user_front)],
+)
 async def download_firmware_response(
     version_id: str,
     storage: VersionStorage = Depends(build_storage_dependency(VersionStorage)),
@@ -38,7 +47,7 @@ async def download_firmware_response(
     )
 
 
-@router.post("/")
+@router.post("/", dependencies=[Depends(get_admin_user)])
 async def create_version(
     data: VersionCreateModel,
     storage: VersionStorage = Depends(build_storage_dependency(VersionStorage)),
@@ -46,7 +55,9 @@ async def create_version(
     return await storage.create_version_object(data=data)
 
 
-@router.post("/firmware", name="add_firmware_version")
+@router.post(
+    "/firmware", name="add_firmware_version", dependencies=[Depends(get_admin_user)]
+)
 async def add_firmware_version(
     firmware_id: str = Form(...),
     version: str = Form(...),
@@ -61,7 +72,7 @@ async def add_firmware_version(
     )
 
 
-@router.delete("/", name="delete_version")
+@router.delete("/", name="delete_version", dependencies=[Depends(get_admin_user)])
 async def delete_version(
     data: VersionDeleteModel,
     storage: VersionStorage = Depends(build_storage_dependency(VersionStorage)),
@@ -71,7 +82,9 @@ async def delete_version(
     return data
 
 
-@router.get("/firmware", name="get_firmware_versions")
+@router.get(
+    "/firmware", name="get_firmware_versions", dependencies=[Depends(get_current_user)]
+)
 async def get_firmware_versions(
     firmware_id: str,
     storage: VersionStorage = Depends(build_storage_dependency(VersionStorage)),

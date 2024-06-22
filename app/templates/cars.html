@@ -39,7 +39,7 @@
 
                     <div class="col-md-5">
                         <label for="car-choice">Авто</label>
-                        <select id="car-choice" class="form-control block-js-choice" name="car">
+                        <select id="car-choice" class="form-control car-js-choice" name="car">
                             <option value="">Название авто</option>
                         </select>
                     </div>
@@ -54,9 +54,11 @@
     <div class="card mt-4">
         <div class="card-header d-flex justify-content-between">
             <span class="pt-1">Список</span>
-            <button type="button" class="btn btn-sm btn-success" data-bs-toggle="modal" data-bs-target="#addCarModal">
-                <i class="fa-solid fa-plus"></i>
-            </button>
+            {% if user.scope == 'admin' %}
+                <button type="button" class="btn btn-sm btn-success" data-bs-toggle="modal" data-bs-target="#addCarModal">
+                    <i class="fa-solid fa-plus"></i>
+                </button>
+            {% endif %}
         </div>
         <div class="card-body">
 
@@ -66,14 +68,16 @@
                         <div class="card-body" data-car-id="{{ car.id }}">
                             <div class="card-title d-flex justify-content-between">
                                 <h4>{{car.brand}} {{car.model}} {{car.numberplate}}</h4>
-                                <div class="btn-group" role="group" aria-label="Car main button group">
-                                    <button type="button" class="btn btn-primary link-car-block-btn" data-bs-toggle="modal" data-bs-target="#addCarBlockModal" data-car-id="{{ car.id }}">
-                                        <i class="fa-solid fa-chain"></i>
-                                    </button>
-                                    <button type="button" class="btn btn-danger delete-car-btn" data-bs-toggle="modal" data-bs-target="#deleteCarModal" data-car-id="{{ car.id }}">
-                                        <i class="fa-solid fa-xmark"></i>
-                                    </button>
-                                </div>
+                                {% if user.scope == 'admin' %}
+                                    <div class="btn-group" role="group" aria-label="Car main button group">
+                                        <button type="button" class="btn btn-primary link-car-block-btn" data-bs-toggle="modal" data-bs-target="#addCarBlockModal" data-car-id="{{ car.id }}">
+                                            <i class="fa-solid fa-chain"></i>
+                                        </button>
+                                        <button type="button" class="btn btn-danger delete-car-btn" data-bs-toggle="modal" data-bs-target="#deleteCarModal" data-car-id="{{ car.id }}">
+                                            <i class="fa-solid fa-xmark"></i>
+                                        </button>
+                                    </div>
+                                {% endif %}
                             </div>
                             <p class="text-muted">{{car.info}}</p>
 
@@ -92,7 +96,9 @@
                                                     <p class="">Всего прошивок: {{ block.firmwares_count }}</p>
                                                     <div class="btn-group" role="group" aria-label="Block page button group">
                                                         <a href="{{ url_for('block_page', block_id=block.id|string ) }}" class="btn btn-outline-primary">О блоке</a>
-                                                        <button class="btn btn-outline-danger unlink-block-btn" data-bs-toggle="modal" data-bs-target="#unlinkBlockModal" data-block-id="{{ block.id|string }}" data-car-id="{{ car.id }}">Отвязать</button>
+                                                        {% if user.scope == 'admin' %}
+                                                            <button class="btn btn-outline-danger unlink-block-btn" data-bs-toggle="modal" data-bs-target="#unlinkBlockModal" data-block-id="{{ block.id|string }}" data-car-id="{{ car.id }}">Отвязать</button>
+                                                        {% endif %}
                                                     </div>
                                                 </li>
 
@@ -111,133 +117,135 @@
             </div>
         </div>
     </div>
-    <div class="modal fade" id="addCarBlockModal" tabindex="-1" aria-labelledby="addCarBlockModalLabel" aria-hidden="true">
-        <div class="modal-dialog">
-            <div class="modal-content">
-                <div class="modal-header">
-                    <h5 class="modal-title" id="addCarBlockModalLabel">Привязка блока</h5>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-                </div>
-                <div class="modal-body">
-                    <form id="addCarBlockForm" method="post" action="{{ url_for('link_block_to_car') }}">
-                        <div class="mb-3">
-                            <label for="block-choice-input" class="form-label">Блок</label>
-                            <select id="block-choice-input" class="form-control block-js-choice" name="block_id">
-                            </select>
-                        </div>
-                        <div class="mb-3">
-                            <label for="block_name_input" class="form-label">Название блока</label>
-                            <input type="text" class="form-control" id="block_name_input" name="block_name" value="qwerty1234" placeholder="qwerty1234">
-                        </div>
-
-                        <div class="mb-3">
-                            <label for="model_name_input" class="form-label">Модель блока</label>
-                            <input type="text" class="form-control" id="model_name_input" name="model_name" value="qwerty1234" placeholder="qwerty1234">
-                        </div>
-                        <div id="addCarBlockFormErrorMessage" class="alert alert-danger" role="alert" style="display: none;"></div>
-                    </form>
-                </div>
-                <div class="modal-footer">
-                    <span id="submitAddCarBlockLoading" class="spinner-border spinner-border-sm" role="status" aria-hidden="true" style="display: none;"></span>
-                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Закрыть</button>
-                    <button type="button" class="btn btn-primary" id="submitAddCarBlockBtn">
-                        <span id="submitAddCarBlockBtnText">Привязать</span>
-                    </button>
-                </div>
-            </div>
-        </div>
-    </div>
-    <div class="modal fade" id="addCarModal" tabindex="-1" aria-labelledby="addCarModalLabel" aria-hidden="true">
-        <div class="modal-dialog">
-            <div class="modal-content">
-                <div class="modal-header">
-                    <h5 class="modal-title" id="addCarModalLabel">Добавление авто</h5>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-                </div>
-                <form id="addCarForm" method="post" action="{{ url_for('add_car') }}">
+    {% if user.scope == 'admin' %}
+        <div class="modal fade" id="addCarBlockModal" tabindex="-1" aria-labelledby="addCarBlockModalLabel" aria-hidden="true">
+            <div class="modal-dialog">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title" id="addCarBlockModalLabel">Привязка блока</h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                    </div>
                     <div class="modal-body">
-                        <div class="mb-3">
-                            <label for="numberplate_input" class="form-label">Номер авто</label>
-                            <input type="text" class="form-control" id="numberplate_input" name="numberplate" placeholder="а003то152" pattern="^[А-Яа-я]{1}\d{3}[А-Яа-я]{2}\d{2,3}$" required>
-                            <div class="invalid-feedback">Номер автомобиля должен быть в формате А123БВ45 или А123БВ456</div>
-                        </div>
-                        <div class="mb-3">
-                            <label for="auto_brand_choice">Марка авто</label>
-                            <select id="auto_brand_choice" class="form-control auto-brand-js-choice" name="auto_brand">
-                            </select>
-                        </div>
-                        <div class="mb-3">
-                            <label for="auto_model_choice">Модель авто</label>
-                            <select id="auto_model_choice" class="form-control auto-model-js-choice" name="auto_model">
-                            </select>
-                        </div>
-                        <div class="mb-3">
-                            <label for="info_input" class="form-label">Дополнительная информация</label>
-                            <textarea class="form-control" id="info_input" placeholder="" name="info"></textarea>
-                        </div>
-                        <div id="formErrorMessage" class="alert alert-danger" role="alert" style="display: none;"></div>
+                        <form id="addCarBlockForm" method="post" action="{{ url_for('link_block_to_car') }}">
+                            <div class="mb-3">
+                                <label for="block-choice-input" class="form-label">Блок</label>
+                                <select id="block-choice-input" class="form-control block-js-choice" name="block_id">
+                                </select>
+                            </div>
+                            <div class="mb-3">
+                                <label for="block_name_input" class="form-label">Название блока</label>
+                                <input type="text" class="form-control" id="block_name_input" name="block_name" value="qwerty1234" placeholder="qwerty1234">
+                            </div>
+
+                            <div class="mb-3">
+                                <label for="model_name_input" class="form-label">Модель блока</label>
+                                <input type="text" class="form-control" id="model_name_input" name="model_name" value="qwerty1234" placeholder="qwerty1234">
+                            </div>
+                            <div id="addCarBlockFormErrorMessage" class="alert alert-danger" role="alert" style="display: none;"></div>
+                        </form>
                     </div>
                     <div class="modal-footer">
-                        <span id="submitAddCarLoading" class="spinner-border spinner-border-sm" role="status" aria-hidden="true" style="display: none;"></span>
+                        <span id="submitAddCarBlockLoading" class="spinner-border spinner-border-sm" role="status" aria-hidden="true" style="display: none;"></span>
                         <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Закрыть</button>
-                        <button type="submit" class="btn btn-primary" id="submitAddCarBtn">
-                            <span id="submitAddCarBtnText">Добавить</span>
+                        <button type="button" class="btn btn-primary" id="submitAddCarBlockBtn">
+                            <span id="submitAddCarBlockBtnText">Привязать</span>
                         </button>
                     </div>
-                </form>
-            </div>
-        </div>
-    </div>
-    <div class="modal fade" id="unlinkBlockModal" tabindex="-1" aria-labelledby="unlinkBlockModalLabel" aria-hidden="true">
-        <div class="modal-dialog">
-            <div class="modal-content">
-                <div class="modal-header">
-                    <h5 class="modal-title" id="unlinkBlockModalLabel">Подтверждение отвязки</h5>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-                </div>
-                <div class="modal-body">
-                    Вы уверены, что хотите отвязать этот блок?
-                </div>
-                <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Отмена</button>
-                    <button type="button" class="btn btn-danger" id="confirmUnlinkBlockBtn">Отвязать</button>
                 </div>
             </div>
         </div>
-    </div>
-    <div class="modal fade" id="deleteCarModal" tabindex="-1" aria-labelledby="deleteCarModalLabel" aria-hidden="true">
-        <div class="modal-dialog">
-            <div class="modal-content">
-                <div class="modal-header">
-                    <h5 class="modal-title" id="deleteCarModalLabel">Подтверждение удаления</h5>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-                </div>
-                <div class="modal-body">
-                    Вы уверены, что хотите удалить авто?
-                </div>
-                <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Отмена</button>
-                    <button type="button" class="btn btn-danger" id="confirmDeleteCarBtn">Удалить</button>
+        <div class="modal fade" id="addCarModal" tabindex="-1" aria-labelledby="addCarModalLabel" aria-hidden="true">
+            <div class="modal-dialog">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title" id="addCarModalLabel">Добавление авто</h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                    </div>
+                    <form id="addCarForm" method="post" action="{{ url_for('add_car') }}">
+                        <div class="modal-body">
+                            <div class="mb-3">
+                                <label for="numberplate_input" class="form-label">Номер авто</label>
+                                <input type="text" class="form-control" id="numberplate_input" name="numberplate" placeholder="а003то152" pattern="^[А-Яа-я]{1}\d{3}[А-Яа-я]{2}\d{2,3}$" required>
+                                <div class="invalid-feedback">Номер автомобиля должен быть в формате А123БВ45 или А123БВ456</div>
+                            </div>
+                            <div class="mb-3">
+                                <label for="auto_brand_choice">Марка авто</label>
+                                <select id="auto_brand_choice" class="form-control auto-brand-js-choice" name="auto_brand">
+                                </select>
+                            </div>
+                            <div class="mb-3">
+                                <label for="auto_model_choice">Модель авто</label>
+                                <select id="auto_model_choice" class="form-control auto-model-js-choice" name="auto_model">
+                                </select>
+                            </div>
+                            <div class="mb-3">
+                                <label for="info_input" class="form-label">Дополнительная информация</label>
+                                <textarea class="form-control" id="info_input" placeholder="" name="info"></textarea>
+                            </div>
+                            <div id="formErrorMessage" class="alert alert-danger" role="alert" style="display: none;"></div>
+                        </div>
+                        <div class="modal-footer">
+                            <span id="submitAddCarLoading" class="spinner-border spinner-border-sm" role="status" aria-hidden="true" style="display: none;"></span>
+                            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Закрыть</button>
+                            <button type="submit" class="btn btn-primary" id="submitAddCarBtn">
+                                <span id="submitAddCarBtnText">Добавить</span>
+                            </button>
+                        </div>
+                    </form>
                 </div>
             </div>
         </div>
-    </div>
-
+        <div class="modal fade" id="unlinkBlockModal" tabindex="-1" aria-labelledby="unlinkBlockModalLabel" aria-hidden="true">
+            <div class="modal-dialog">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title" id="unlinkBlockModalLabel">Подтверждение отвязки</h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                    </div>
+                    <div class="modal-body">
+                        Вы уверены, что хотите отвязать этот блок?
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Отмена</button>
+                        <button type="button" class="btn btn-danger" id="confirmUnlinkBlockBtn">Отвязать</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="modal fade" id="deleteCarModal" tabindex="-1" aria-labelledby="deleteCarModalLabel" aria-hidden="true">
+            <div class="modal-dialog">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title" id="deleteCarModalLabel">Подтверждение удаления</h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                    </div>
+                    <div class="modal-body">
+                        Вы уверены, что хотите удалить авто?
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Отмена</button>
+                        <button type="button" class="btn btn-danger" id="confirmDeleteCarBtn">Удалить</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    {% endif %}
 {% endblock %}
 
 {% block scripts %}
     <script src="{{ url_for('static', path='js/choices.min.js') }}"></script>
     <script>
+        {% if user.scope == 'admin' %}
+            let blockIdToUnlink = null;
+            let carIdToUnlink = null;
+            let carIdToLink = null;
+            let carIdToDelete = null;
 
-        let blockIdToUnlink = null;
-        let carIdToUnlink = null;
-        let carIdToLink = null;
-        let carIdToDelete = null;
-
-        const cleanupModals = () => {
-            $(document.body).removeClass("modal-open");
-            $(".modal-backdrop").remove();
-        }
+            const cleanupModals = () => {
+                $(document.body).removeClass("modal-open");
+                $(".modal-backdrop").remove();
+            }
+        {% endif %}
         function debounce(func, wait) {
             let timeout;
             return function(...args) {
@@ -246,323 +254,319 @@
                 timeout = setTimeout(() => func.apply(context, args), wait);
             };
         }
-
-        async function fetchCarsAndUpdate() {
-            try {
-                const response = await fetch(
-                    "{{ url_for('get_cars_full') }}",
-                    {
-                        method: 'GET',
-                        headers: {
-                            'Content-Type': 'application/json',
-                        },
-                    }
-                );
-                const data = await response.json();
-                updateCarsList(data);
-            } catch (error) {
-                console.error('Error fetching blocks:', error);
+        {% if user.scope == 'admin' %}
+            async function fetchCarsAndUpdate() {
+                try {
+                    const response = await fetch(
+                        "{{ url_for('get_cars_full') }}",
+                        {
+                            method: 'GET',
+                            headers: {
+                                'Content-Type': 'application/json',
+                            },
+                        }
+                    );
+                    const data = await response.json();
+                    updateCarsList(data);
+                } catch (error) {
+                    console.error('Error fetching blocks:', error);
+                }
             }
-        }
+        {% endif %}
 
-        function updateCarsList(cars) {
-            const carsList = document.getElementById('carsList');
-            carsList.innerHTML = '';
+        {% if user.scope == 'admin' %}
+            function updateCarsList(cars) {
+                console.log("update card list", cars)
+                const carsList = document.getElementById('carsList');
+                carsList.innerHTML = '';
 
-            cars.forEach(car => {
-                const carCard = document.createElement('div');
-                carCard.classList.add('card');
-                carCard.innerHTML = `
+                cars.forEach(car => {
+                    const carCard = document.createElement('div');
+                    carCard.classList.add('card');
+                    carCard.innerHTML = `
                 <div class="card-body" data-car-id="${car.id}">
                     <div class="card-title d-flex justify-content-between">
                         <h4>${car.brand} ${car.model} ${car.numberplate}</h4>
-                        <p class="text-muted">${car.info}</p>
-                        <button type="button" class="btn btn-danger delete-car-btn" data-bs-toggle="modal" data-bs-target="#deleteCarModal" data-car-id="${car.id}">
-                            <i class="fa-solid fa-xmark"></i>
-                        </button>
+                        <div class="btn-group" role="group" aria-label="Car main button group">
+                            <button type="button" class="btn btn-primary link-car-block-btn" data-bs-toggle="modal" data-bs-target="#addCarBlockModal" data-car-id="${car.id}">
+                                <i class="fa-solid fa-chain"></i>
+                            </button>
+                            <button type="button" class="btn btn-danger delete-car-btn" data-bs-toggle="modal" data-bs-target="#deleteCarModal" data-car-id="${car.id}">
+                                <i class="fa-solid fa-xmark"></i>
+                            </button>
+                        </div>
                     </div>
-                    ${cars.blocks.map(block => `
-                <div class="accordion" id="blockAccordion-${block.id}">
-                <div class="accordion-item mb-2">
-                <h2 class="accordion-header">
-                <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#blockCollapse-${block.id}" aria-expanded="true" aria-controls="blockCollapse-${block.id}">
-                ${block.block_name} ${block.model_name}
-                </button>
-                </h2>
-                <div id="blockCollapse-${block.id}" class="accordion-collapse collapse" data-bs-parent="#blockAccordion-${block.id}">
-                <ul class="list-group-flush">
-                <li class="list-group-item mt-4 mb-4">
-                <div class="fw-bold">Название блока: ${block.block_name} ${block.model_name}</div>
-                <p class="">Всего прошивок: ${block.firmwares_count}</p>
-                <div class="btn-group" role="group" aria-label="Block page button group">
-                <a href="${`{{ url_for('block_page', block_id="REPLACE_ID") }}`.replace("REPLACE_ID", block.id)}" class="btn btn-outline-primary">О блоке</a>
-                <button class="btn btn-outline-danger unlink-block-btn" data-bs-toggle="modal" data-bs-target="#unlinkBlockModal" data-block-id="${block.id}">Удалить</button>
-                </div>
-                </li>
+                    <p class="text-muted">${car.info}</p>
+                    ${car.blocks.map(block => `
+                    <div class="accordion" id="blockAccordion-${block.id}">
+                    <div class="accordion-item mb-2">
+                    <h2 class="accordion-header">
+                    <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#blockCollapse-${block.id}" aria-expanded="true" aria-controls="blockCollapse-${block.id}">
+                    ${block.block_name} ${block.model_name}
+                    </button>
+                    </h2>
+                    <div id="blockCollapse-${block.id}" class="accordion-collapse collapse" data-bs-parent="#blockAccordion-${block.id}">
+                    <ul class="list-group-flush">
+                    <li class="list-group-item mt-4 mb-4">
+                    <div class="fw-bold">Название блока: ${block.block_name} ${block.model_name}</div>
+                    <p class="">Всего прошивок: ${block.firmwares_count}</p>
+                    <div class="btn-group" role="group" aria-label="Block page button group">
+                    <a href="${`{{ url_for('block_page', block_id="REPLACE_ID" ) }}`.replace("REPLACE_ID", block.id)}" class="btn btn-outline-primary">О блоке</a>
+                    <button class="btn btn-outline-danger unlink-block-btn" data-bs-toggle="modal" data-bs-target="#unlinkBlockModal" data-block-id="${block.id}" data-car-id="${car.id}">Отвязать</button>
+                    </div>
+                    </li>
 
-                </ul>
-                </div>
-                </div>
-                </div>
-                `).join('')}
+                    </ul>
+                    </div>
+                    </div>
+                    </div>
+                    `).join('')}
 
                 </div>
                 <div class="card-footer text-body-secondary">
                     <span>Всего блоков доступно: <b>${car.blocks_count}</b></span>
                 </div>
                 `;
-                carsList.appendChild(carCard);
-            });
-
-            document.querySelectorAll('.unlink-block-btn').forEach(button => {
-                button.addEventListener('click', function() {
-                    blockIdToUnlink = this.getAttribute('data-block-id');
-                    carIdToUnlink = this.getAttribute('data-car-id');
+                    carsList.appendChild(carCard);
                 });
-            });
-            document.querySelectorAll('.delete-car-btn').forEach(button => {
-                button.addEventListener('click', function() {
-                    carIdToDelete = this.getAttribute('data-car-id');
+
+                document.querySelectorAll('.unlink-block-btn').forEach(button => {
+                    button.addEventListener('click', function() {
+                        blockIdToUnlink = this.getAttribute('data-block-id');
+                        carIdToUnlink = this.getAttribute('data-car-id');
+                    });
                 });
-            });
-            document.querySelectorAll('.link-car-block-btn').forEach(button => {
-                button.addEventListener('click', function() {
-                    carIdToLink = this.getAttribute('data-car-id');
+                document.querySelectorAll('.delete-car-btn').forEach(button => {
+                    button.addEventListener('click', function() {
+                        carIdToDelete = this.getAttribute('data-car-id');
+                    });
                 });
-            });
-        }
+                document.querySelectorAll('.link-car-block-btn').forEach(button => {
+                    button.addEventListener('click', function() {
+                        carIdToLink = this.getAttribute('data-car-id');
+                    });
+                });
+            }
+        {% endif %}
 
+        {% if user.scope == 'admin' %}
+            const fetchDataFx = async (formAction, requestData) => {
+                return new Promise((resolve, reject) => {
+                    fetch(formAction, {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                        },
+                        body: requestData
+                    }).then(response => response.json())
+                        .then(data => {
+                            if (data.status === 422){
+                                reject("Произошла ошибка при вводе данных");
+                            }
+                            if (data.status >= 500){
+                                reject("Произошла ошибка на сервере");
+                            }
+                            if (!data.ok && !data.success) {
+                                reject(data.message || data.detail || "Произошла ошибка при обработке данных");
+                            } else {
+                                resolve(data);
+                            }
+                        })
+                })
+            }
+        {% endif %}
 
-        const fetchDataFx = async (formAction, requestData) => {
-            return new Promise((resolve, reject) => {
-                fetch(formAction, {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                    },
-                    body: requestData
-                }).then(response => response.json())
-                    .then(data => {
-                        if (data.status === 422){
-                            reject("Произошла ошибка при вводе данных");
-                        }
-                        if (data.status >= 500){
-                            reject("Произошла ошибка на сервере");
-                        }
-                        if (!data.ok || !data.success) {
-                            reject(data.message || "Произошла ошибка при обработке данных");
-                        } else {
-                            resolve(data);
-                        }
-                    })
-            })
-        }
+        {% if user.scope == 'admin' %}
+            const buildModalRequestData = (data) => {
+                return JSON.stringify({
+                    numberplate: data.numberplate,
+                    model: data.auto_model,
+                    brand: data.auto_brand,
+                    info: data.info
+                });
+            }
 
+            const buildAddLinkRequestData = (data) => {
+                return JSON.stringify({
+                    car_id: carIdToLink,
+                    block: {
+                        id: data.block_id,
+                        block_name: data.block_name,
+                        model_name: data.model_name,
+                    }
+                });
+            }
+        {% endif %}
 
-        const buildModalRequestData = (data) => {
-            return JSON.stringify({
-                numberplate: data.numberplate,
-                model: data.auto_model,
-                brand: data.auto_brand,
-                info: data.info
-            });
-        }
+        {% if user.scope == 'admin' %}
+            const modalSubmitEvent = async (event) => {
+                let form = document.getElementById('addCarForm');
+                let submitButton = document.getElementById('submitAddCarBtn');
+                let loadingIcon = document.getElementById('submitAddCarLoading');
+                let errorMessage = document.getElementById('formErrorMessage');
+                let numberplateInput = document.getElementById('numberplate_input');
 
-        const buildAddLinkRequestData = (data) => {
-            return JSON.stringify({
-                car_id: carIdToLink,
-                block: {
-                    id: data.block_id,
-                    block_name: data.block_name,
-                    model_name: data.model_name,
+                function reset_loading_icon() {
+                    loadingIcon.className = 'spinner-border spinner-border-sm';
+                    loadingIcon.style["color"] = null;
+                    loadingIcon.style.display = 'none';
                 }
-            });
-        }
+                function display_loading() {
+                    errorMessage.style.display = 'none';
+                    errorMessage.innerText = '';
 
+                    submitButton.disabled = true;
+                    loadingIcon.className = 'spinner-border spinner-border-sm';
+                    loadingIcon.style.display = 'inline-block';
+                }
+                function display_error(message) {
+                    errorMessage.style.display = 'block';
+                    errorMessage.innerText = message || 'Ошибка при обработке запроса. Попробуйте ещё раз.';
+                    loadingIcon.className = 'bi bi-x-circle';
+                    submitButton.disabled = false;
+                    reset_loading_icon();
+                }
+                function reset_error() {
+                    errorMessage.style.display = 'none';
+                    errorMessage.innerText = '';
+                    submitButton.disabled = false;
+                    reset_loading_icon();
 
-        const modalSubmitEvent = async (event) => {
-            let form = document.getElementById('addCarForm');
-            let submitButton = document.getElementById('submitAddCarBtn');
-            let loadingIcon = document.getElementById('submitAddCarLoading');
-            let errorMessage = document.getElementById('formErrorMessage');
-            let numberplateInput = document.getElementById('numberplate_input');
+                }
+                function display_success() {
+                    loadingIcon.className = "fa-regular fa-circle-check";
+                    loadingIcon.style["color"] = "#63E6BE";
+                    submitButton.disabled = false;
+                }
 
-            function reset_loading_icon() {
-                loadingIcon.className = 'spinner-border spinner-border-sm';
-                loadingIcon.style["color"] = null;
-                loadingIcon.style.display = 'none';
-            }
-            function display_loading() {
-                errorMessage.style.display = 'none';
-                errorMessage.innerText = '';
-
-                submitButton.disabled = true;
-                loadingIcon.className = 'spinner-border spinner-border-sm';
-                loadingIcon.style.display = 'inline-block';
-            }
-            function display_error(message) {
-                errorMessage.style.display = 'block';
-                errorMessage.innerText = message || 'Ошибка при обработке запроса. Попробуйте ещё раз.';
-                loadingIcon.className = 'bi bi-x-circle';
-                submitButton.disabled = false;
                 reset_loading_icon();
+                display_loading();
+                const carNumberPattern = /^[А-Яа-я]{1}\d{3}[А-Яа-я]{2}\d{2,3}$/;
+                if (!carNumberPattern.test(numberplateInput.value)) {
+                    numberplateInput.classList.add('is-invalid');
+                    reset_error();
+                    return;
+                } else {
+                    numberplateInput.classList.remove('is-invalid');
+                }
+
+                const requestData = buildModalRequestData(Object.fromEntries(new FormData(form).entries()));
+                console.log("requestData", requestData);
+                try {
+                    await fetchDataFx(form.action, requestData);
+                }
+                catch (error) {
+                    display_error(error);
+                    return;
+                }
+                await fetchCarsAndUpdate();
+                display_success();
             }
-            function reset_error() {
-                errorMessage.style.display = 'none';
-                errorMessage.innerText = '';
-                submitButton.disabled = false;
+        {% endif %}
+
+        {% if user.scope == 'admin' %}
+            const addCarBlockLinkSubmitEvent = async (event) => {
+                let form = document.getElementById('addCarBlockForm');
+                let submitButton = document.getElementById('submitAddCarBlockBtn');
+                let loadingIcon = document.getElementById('submitAddCarBlockLoading');
+                let errorMessage = document.getElementById('addCarBlockFormErrorMessage');
+
+                function reset_loading_icon() {
+                    loadingIcon.className = 'spinner-border spinner-border-sm';
+                    loadingIcon.style["color"] = null;
+                    loadingIcon.style.display = 'none';
+                }
+                function display_loading() {
+                    errorMessage.style.display = 'none';
+                    errorMessage.innerText = '';
+
+                    submitButton.disabled = true;
+                    loadingIcon.className = 'spinner-border spinner-border-sm';
+                    loadingIcon.style.display = 'inline-block';
+                }
+                function display_error(message) {
+                    errorMessage.style.display = 'block';
+                    errorMessage.innerText = message || 'Ошибка при обработке запроса. Попробуйте ещё раз.';
+                    loadingIcon.className = 'bi bi-x-circle';
+                    submitButton.disabled = false;
+                    reset_loading_icon();
+                }
+                function reset_error() {
+                    errorMessage.style.display = 'none';
+                    errorMessage.innerText = '';
+                    submitButton.disabled = false;
+                    reset_loading_icon();
+
+                }
+                function display_success() {
+                    loadingIcon.className = "fa-regular fa-circle-check";
+                    loadingIcon.style["color"] = "#63E6BE";
+                    submitButton.disabled = false;
+                }
+
                 reset_loading_icon();
+                display_loading();
 
+                const requestData = buildAddLinkRequestData(Object.fromEntries(new FormData(form).entries()));
+                console.log("requestData", requestData);
+                try {
+                    await fetchDataFx(form.action, requestData);
+                }
+                catch (error) {
+                    display_error(error);
+                    return;
+                }
+                await fetchCarsAndUpdate();
+                display_success();
             }
-            function display_success() {
-                loadingIcon.className = "fa-regular fa-circle-check";
-                loadingIcon.style["color"] = "#63E6BE";
-                submitButton.disabled = false;
+        {% endif %}
+
+        {% if user.scope == 'admin' %}
+            const fetchBlockUnlink = async (blockId, carId) => {
+                return new Promise((resolve, reject) => {
+                    fetch("{{ url_for('unlink_block_to_car') }}", {
+                        method: 'DELETE',
+                        headers: {
+                            'Content-Type': 'application/json',
+                        },
+                        body: JSON.stringify({car_id: carId, block_id: blockId}),
+                    }).then(response => response.json())
+                        .then(data => {
+                            if (!data) {
+                                reject(`Error deleting link for block ${blockId} to car ${carId}`);
+                            } else {
+                                resolve(data);
+                            }
+                        })
+                })
             }
+        {% endif %}
 
-            reset_loading_icon();
-            display_loading();
-            const carNumberPattern = /^[А-Яа-я]{1}\d{3}[А-Яа-я]{2}\d{2,3}$/;
-            if (!carNumberPattern.test(numberplateInput.value)) {
-                numberplateInput.classList.add('is-invalid');
-                reset_error();
-                return;
-            } else {
-                numberplateInput.classList.remove('is-invalid');
-            }
-
-            const requestData = buildModalRequestData(Object.fromEntries(new FormData(form).entries()));
-            console.log("requestData", requestData);
-            try {
-                await fetchDataFx(form.action, requestData);
-            }
-            catch (error) {
-                display_error(error);
-                return;
-            }
-            await fetchCarsAndUpdate();
-            display_success();
-        }
-
-
-        const addCarBlockLinkSubmitEvent = async (event) => {
-            let form = document.getElementById('addCarBlockForm');
-            let submitButton = document.getElementById('submitAddCarBlockBtn');
-            let loadingIcon = document.getElementById('submitAddCarBlockLoading');
-            let errorMessage = document.getElementById('addCarBlockFormErrorMessage');
-
-            function reset_loading_icon() {
-                loadingIcon.className = 'spinner-border spinner-border-sm';
-                loadingIcon.style["color"] = null;
-                loadingIcon.style.display = 'none';
-            }
-            function display_loading() {
-                errorMessage.style.display = 'none';
-                errorMessage.innerText = '';
-
-                submitButton.disabled = true;
-                loadingIcon.className = 'spinner-border spinner-border-sm';
-                loadingIcon.style.display = 'inline-block';
-            }
-            function display_error(message) {
-                errorMessage.style.display = 'block';
-                errorMessage.innerText = message || 'Ошибка при обработке запроса. Попробуйте ещё раз.';
-                loadingIcon.className = 'bi bi-x-circle';
-                submitButton.disabled = false;
-                reset_loading_icon();
-            }
-            function reset_error() {
-                errorMessage.style.display = 'none';
-                errorMessage.innerText = '';
-                submitButton.disabled = false;
-                reset_loading_icon();
-
-            }
-            function display_success() {
-                loadingIcon.className = "fa-regular fa-circle-check";
-                loadingIcon.style["color"] = "#63E6BE";
-                submitButton.disabled = false;
-            }
-
-            reset_loading_icon();
-            display_loading();
-
-            const requestData = buildAddLinkRequestData(Object.fromEntries(new FormData(form).entries()));
-            console.log("requestData", requestData);
-            try {
-                await fetchDataFx(form.action, requestData);
-            }
-            catch (error) {
-                display_error(error);
-                return;
-            }
-            await fetchCarsAndUpdate();
-            display_success();
-        }
-
-
-        const fetchBlockLink = async (blockId, carId) => {
-            return new Promise((resolve, reject) => {
-                fetch("{{ url_for('link_block_to_car') }}", {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                    },
-                    body: JSON.stringify({car_id: carId, block_id: blockId}),
-                }).then(response => response.json())
-                    .then(data => {
-                        if (!data) {
-                            reject(`Error adding link for block ${blockId} to car ${carId}`);
-                        } else {
-                            resolve(data);
-                        }
-                    })
-            })
-        }
-
-        const fetchBlockUnlink = async (blockId, carId) => {
-            return new Promise((resolve, reject) => {
-                fetch("{{ url_for('unlink_block_to_car') }}", {
-                    method: 'DELETE',
-                    headers: {
-                        'Content-Type': 'application/json',
-                    },
-                    body: JSON.stringify({car_id: carId, block_id: blockId}),
-                }).then(response => response.json())
-                    .then(data => {
-                        if (!data) {
-                            reject(`Error deleting link for block ${blockId} to car ${carId}`);
-                        } else {
-                            resolve(data);
-                        }
-                    })
-            })
-        }
-
-        const fetchCarDelete = async carId => {
-            return new Promise((resolve, reject) => {
-                fetch("{{ url_for('delete_car') }}", {
-                    method: 'DELETE',
-                    headers: {
-                        'Content-Type': 'application/json',
-                    },
-                    body: JSON.stringify({id: carId}),
-                }).then(response => response.json())
-                    .then(data => {
-                        if (!data) {
+        {% if user.scope == 'admin' %}
+            const fetchCarDelete = async carId => {
+                return new Promise((resolve, reject) => {
+                    fetch("{{ url_for('delete_car') }}", {
+                        method: 'DELETE',
+                        headers: {
+                            'Content-Type': 'application/json',
+                        },
+                        body: JSON.stringify({id: carId}),
+                    }).then(response => response.json())
+                        .then(data => {
+                            if (!data) {
                             // Ошибка может вылезти, в том числе если удалено 0 элементов, это ок
-                            reject(`Error deleting firmware ${carId}`);
-                        } else {
-                            resolve(data);
-                        }
-                    })
-            })
-        }
-
+                                reject(`Error deleting firmware ${carId}`);
+                            } else {
+                                resolve(data);
+                            }
+                        })
+                })
+            }
+        {% endif %}
         document.addEventListener('DOMContentLoaded', function() {
-
-            document.getElementById('submitAddCarBtn').addEventListener('click', modalSubmitEvent);
-
+            {% if user.scope == 'admin' %}
+                document.getElementById('submitAddCarBtn').addEventListener('click', modalSubmitEvent);
+            {% endif %}
             const block_choices_elements = document.querySelectorAll('.block-js-choice');
 
             for (const block_choices_element of block_choices_elements) {
@@ -601,6 +605,7 @@
                     allowHTML: false,
 
                 });
+
                 async function searchHandler(event) {
                     const query = event.detail.value;
                     try {
@@ -618,9 +623,73 @@
                         console.error('API Error:', error);
                     }
                 }
-                let delayed_search = debounce(searchHandler, 500);
+                let delayed_search = debounce(searchHandler, 300);
 
                 block_choices_element.addEventListener(
+                    'search',
+                    delayed_search,
+                    false,
+                );
+            }
+
+            const car_choices_elements = document.querySelectorAll('.car-js-choice');
+
+            for (const car_choices_element of car_choices_elements) {
+                const car_choices = new Choices(car_choices_element, {
+                    choices: [],
+                    noChoicesText: 'Ничего не найдено',
+                    itemSelectText: "Нажмите, чтобы выбрать",
+                    noResultsText: 'Ничего не найдено',
+                    removeItemButton: true,
+                    searchPlaceholderValue: "Начните вводить данные об авто",
+                    classNames: {
+                        containerOuter: 'choices',
+                        containerInner: 'choices__inner',
+                        input: 'choices__input',
+                        inputCloned: 'choices__input--cloned',
+                        list: 'choices__list',
+                        listItems: 'choices__list--multiple',
+                        listSingle: 'choices__list--single',
+                        listDropdown: 'choices__list--dropdown',
+                        item: 'choices__item',
+                        itemSelectable: 'choices__item--selectable',
+                        itemDisabled: 'choices__item--disabled',
+                        itemOption: 'choices__item--choice',
+                        group: 'choices__group',
+                        groupHeading: 'choices__heading',
+                        button: 'choices__button',
+                        activeState: 'is-active',
+                        focusState: 'is-focused',
+                        openState: 'is-open',
+                        disabledState: 'is-disabled',
+                        highlightedState: 'is-highlighted',
+                        selectedState: 'is-selected',
+                        flippedState: 'is-flipped',
+                    },
+                    valueComparer: (a, b) => a.lower() === b.lower(),
+                    allowHTML: false,
+
+                });
+                async function carsSearchHandler(event) {
+                    const query = event.detail.value;
+                    try {
+                        const response = await fetch("{{ url_for('get_cars') }}" + `?query=${query}`);
+                        const data = await response.json();
+                        console.log('API Response for cars:', data);
+                        if (data.length === 0) {
+                            return;
+                        }
+                        const new_choices = data.map(
+                            item => ({value: item.id, label: `${item.numberplate} - ${item.brand} ${item.model}`})
+                        );
+                        car_choices.setChoices(new_choices, 'value', 'label', true);
+                    } catch (error) {
+                        console.error('API Error:', error);
+                    }
+                }
+                let delayed_search = debounce(carsSearchHandler, 300);
+
+                car_choices_element.addEventListener(
                     'search',
                     delayed_search,
                     false,
@@ -1060,66 +1129,69 @@
 
                 });
             }
-
-            document.querySelectorAll('.unlink-block-btn').forEach(button => {
-                button.addEventListener('click', function() {
-                    blockIdToUnlink = this.getAttribute('data-block-id');
-                    carIdToUnlink = this.getAttribute('data-car-id');
+            {% if user.scope == 'admin' %}
+                document.querySelectorAll('.unlink-block-btn').forEach(button => {
+                    button.addEventListener('click', function() {
+                        blockIdToUnlink = this.getAttribute('data-block-id');
+                        carIdToUnlink = this.getAttribute('data-car-id');
+                    });
                 });
-            });
 
-            document.querySelectorAll('.link-car-block-btn').forEach(button => {
-                button.addEventListener('click', function() {
-                    carIdToLink = this.getAttribute('data-car-id');
+                document.querySelectorAll('.link-car-block-btn').forEach(button => {
+                    button.addEventListener('click', function() {
+                        carIdToLink = this.getAttribute('data-car-id');
+                    });
                 });
-            });
+            {% endif %}
 
-            document.getElementById('confirmUnlinkBlockBtn').addEventListener('click', async function() {
-                if (blockIdToUnlink) {
-                    try {
-                        await fetchBlockUnlink(blockIdToUnlink, carIdToUnlink);
+            {% if user.scope == 'admin' %}
+                document.getElementById('confirmUnlinkBlockBtn').addEventListener('click', async function() {
+                    if (blockIdToUnlink) {
+                        try {
+                            await fetchBlockUnlink(blockIdToUnlink, carIdToUnlink);
+                        }
+                        catch (error) {
+                            console.error('Error:', error);
+                            alert('Ошибка при отвязке блока');
+                            return;
+                        }
+                        const unlinkBlockModal = document.getElementById('unlinkBlockModal');
+                        const modal = bootstrap.Modal.getInstance(unlinkBlockModal);
+                        modal.hide();
+                        cleanupModals();
+                        await fetchCarsAndUpdate();
+
                     }
-                    catch (error) {
-                        console.error('Error:', error);
-                        alert('Ошибка при отвязке блока');
-                        return;
-                    }
-                    const unlinkBlockModal = document.getElementById('unlinkBlockModal');
-                    const modal = bootstrap.Modal.getInstance(unlinkBlockModal);
-                    modal.hide();
-                    cleanupModals();
-                    await fetchCarsAndUpdate();
-
-                }
-            });
-
-            document.getElementById('submitAddCarBlockBtn').addEventListener('click', addCarBlockLinkSubmitEvent);
-
-
-            document.querySelectorAll('.delete-car-btn').forEach(button => {
-                button.addEventListener('click', function() {
-                    carIdToDelete = this.getAttribute('data-car-id');
                 });
-            });
 
-            document.getElementById('confirmDeleteCarBtn').addEventListener('click', async function() {
-                if (carIdToDelete) {
-                    try {
-                        await fetchCarDelete(carIdToDelete);
-                    }
-                    catch (error) {
-                        console.error('Error:', error);
-                        alert('Ошибка при удалении прошивки');
-                        return;
-                    }
-                    const deleteModal = document.getElementById('deleteCarModal');
-                    const modal = bootstrap.Modal.getInstance(deleteModal);
-                    modal.hide();
-                    cleanupModals();
-                    await fetchCarsAndUpdate();
+                document.getElementById('submitAddCarBlockBtn').addEventListener('click', addCarBlockLinkSubmitEvent);
+            {% endif %}
+            {% if user.scope == 'admin' %}
+                document.querySelectorAll('.delete-car-btn').forEach(button => {
+                    button.addEventListener('click', function() {
+                        carIdToDelete = this.getAttribute('data-car-id');
+                    });
+                });
 
-                }
-            });
+                document.getElementById('confirmDeleteCarBtn').addEventListener('click', async function() {
+                    if (carIdToDelete) {
+                        try {
+                            await fetchCarDelete(carIdToDelete);
+                        }
+                        catch (error) {
+                            console.error('Error:', error);
+                            alert('Ошибка при удалении прошивки');
+                            return;
+                        }
+                        const deleteModal = document.getElementById('deleteCarModal');
+                        const modal = bootstrap.Modal.getInstance(deleteModal);
+                        modal.hide();
+                        cleanupModals();
+                        await fetchCarsAndUpdate();
+
+                    }
+                });
+            {% endif %}
         });
     </script>
 {% endblock %}

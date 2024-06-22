@@ -32,14 +32,14 @@
                 <div class="row">
                     <div class="col-md-5">
                         <label for="block-choice">Блок</label>
-                        <select id="block-choice" class="form-control js-choice" name="block">
+                        <select id="block-choice" class="form-control block-js-choice" name="block">
                             <option value="">Название блока</option>
                         </select>
                     </div>
 
                     <div class="col-md-5">
                         <label for="car-choice">Авто</label>
-                        <select id="car-choice" class="form-control js-choice" name="car">
+                        <select id="car-choice" class="form-control car-js-choice" name="car">
                             <option value="">Название авто</option>
                         </select>
                     </div>
@@ -54,9 +54,11 @@
     <div class="card mt-4">
         <div class="card-header d-flex justify-content-between">
             <span class="pt-1">Список</span>
-            <button type="button" class="btn btn-sm btn-success" data-bs-toggle="modal" data-bs-target="#addFirmwareModal">
-                <i class="fa-solid fa-plus"></i>
-            </button>
+            {% if user.scope == 'admin' %}
+                <button type="button" class="btn btn-sm btn-success" data-bs-toggle="modal" data-bs-target="#addFirmwareModal">
+                    <i class="fa-solid fa-plus"></i>
+                </button>
+            {% endif %}
         </div>
         <div class="card-body">
 
@@ -71,9 +73,11 @@
                                         <i class="fa-solid fa-arrow-up-right-from-square"></i>
                                     </div>
                                 </a>
-                                <button type="button" class="btn btn-danger delete-block-btn" data-bs-toggle="modal" data-bs-target="#deleteBlockModal" data-block-id="{{ block.id }}">
-                                    <i class="fa-solid fa-xmark"></i>
-                                </button>
+                                {% if user.scope == 'admin' %}
+                                    <button type="button" class="btn btn-danger delete-block-btn" data-bs-toggle="modal" data-bs-target="#deleteBlockModal" data-block-id="{{ block.id }}">
+                                        <i class="fa-solid fa-xmark"></i>
+                                    </button>
+                                {% endif %}
                             </div>
 
                             {% for firmware in block.firmwares %}
@@ -93,7 +97,9 @@
                                                     <div class="btn-group" role="group" aria-label="Firmware page button group">
                                                         <a href="{{ url_for('firmware', firmware_id=firmware.id|string) }}" class="btn btn-outline-primary">Все версии</a>
                                                         <a href="{{ url_for('download_firmware', version_id=firmware.first_version.id|string ) }}" class="btn btn-outline-success">Скачать</a>
-                                                        <button class="btn btn-outline-danger delete-firmware-btn" data-bs-toggle="modal" data-bs-target="#deleteFirmwareModal" data-firmware-id="{{ firmware.id|string }}">Удалить</button>
+                                                        {% if user.scope == 'admin' %}
+                                                            <button class="btn btn-outline-danger delete-firmware-btn" data-bs-toggle="modal" data-bs-target="#deleteFirmwareModal" data-firmware-id="{{ firmware.id|string }}">Удалить</button>
+                                                        {% endif %}
                                                     </div>
                                                 </li>
 
@@ -113,105 +119,107 @@
             </div>
         </div>
     </div>
-    <div class="modal fade" id="addFirmwareModal" tabindex="-1" aria-labelledby="addFirmwareModalLabel" aria-hidden="true">
-        <div class="modal-dialog">
-            <div class="modal-content">
-                <div class="modal-header">
-                    <h5 class="modal-title" id="addFirmwareModalLabel">Добавление прошивки</h5>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-                </div>
-                <div class="modal-body">
-                    <form id="addFirmwareForm" method="post" action="{{ url_for('add_firmware') }}" enctype="multipart/form-data">
-                        <div class="mb-3">
-                            <label for="name_input" class="form-label">Название контроллера</label>
-                            <input type="text" class="form-control" id="name_input" name="name" value="" placeholder="qwerty1234" required>
-                        </div>
-                        <div class="mb-3">
-                            <label for="block-choice-input" class="form-label">Блок</label>
-                            <select id="block-choice-input" class="form-control js-choice" name="block_id">
-                            </select>
-                        </div>
-                        <div class="mb-3">
-                            <label for="block_name" class="form-label">Название блока</label>
-                            <input type="text" class="form-control" id="block_name" name="block_name" placeholder="qwerty1234">
-                        </div>
-                        <div class="mb-3">
-                            <label for="model_name" class="form-label">Модель блока</label>
-                            <input type="text" class="form-control" id="model_name" name="model_name" placeholder="qwerty1234">
-                        </div>
-                        <div class="mb-3">
-                            <label for="versionInput" class="form-label">Версия прошивки</label>
-                            <input type="text" class="form-control" id="versionInput" name="version" placeholder="0.1.1b" required>
-                        </div>
-                        <div class="mb-3" id=modalDatetimePicker>
-                            <label for="releaseDateInput" class="form-label">Дата выпуска</label>
-                            <input type="date" class="form-control" id="releaseDateInput" name="release_date" value="2002-01-01" required>
-                        </div>
-                        <div class="mb-3">
-                            <label for="fileInput" class="form-label">Файл прошивки</label>
-                            <input type="file" class="form-control" id="fileInput" name="file" required>
-                        </div>
-                        <div id="formErrorMessage" class="alert alert-danger" role="alert" style="display: none;"></div>
-                    </form>
-                </div>
-                <div class="modal-footer">
-                    <span id="submitAddFirmwareLoading" class="spinner-border spinner-border-sm" role="status" aria-hidden="true" style="display: none;"></span>
-                    <button type="button" class="btn btn-primary" id="submitAddFirmwareBtn">
-                        <span id="submitAddFirmwareBtnText">Добавить</span>
-                    </button>
-                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Закрыть</button>
-                </div>
-            </div>
-        </div>
-    </div>
-    <div class="modal fade" id="deleteBlockModal" tabindex="-1" aria-labelledby="deleteBlockModalLabel" aria-hidden="true">
-        <div class="modal-dialog">
-            <div class="modal-content">
-                <div class="modal-header">
-                    <h5 class="modal-title" id="deleteBlockModalLabel">Подтверждение удаления</h5>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-                </div>
-                <div class="modal-body">
-                    Вы уверены, что хотите удалить этот блок?
-                </div>
-                <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Отмена</button>
-                    <button type="button" class="btn btn-danger" id="confirmDeleteBlockBtn">Удалить</button>
+    {% if user.scope == 'admin' %}
+        <div class="modal fade" id="addFirmwareModal" tabindex="-1" aria-labelledby="addFirmwareModalLabel" aria-hidden="true">
+            <div class="modal-dialog">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title" id="addFirmwareModalLabel">Добавление прошивки</h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                    </div>
+                    <div class="modal-body">
+                        <form id="addFirmwareForm" method="post" action="{{ url_for('add_firmware') }}" enctype="multipart/form-data">
+                            <div class="mb-3">
+                                <label for="name_input" class="form-label">Название контроллера</label>
+                                <input type="text" class="form-control" id="name_input" name="name" value="" placeholder="qwerty1234" required>
+                            </div>
+                            <div class="mb-3">
+                                <label for="block-choice-input" class="form-label">Блок</label>
+                                <select id="block-choice-input" class="form-control block-js-choice" name="block_id">
+                                </select>
+                            </div>
+                            <div class="mb-3">
+                                <label for="block_name" class="form-label">Название блока</label>
+                                <input type="text" class="form-control" id="block_name" name="block_name" placeholder="qwerty1234">
+                            </div>
+                            <div class="mb-3">
+                                <label for="model_name" class="form-label">Модель блока</label>
+                                <input type="text" class="form-control" id="model_name" name="model_name" placeholder="qwerty1234">
+                            </div>
+                            <div class="mb-3">
+                                <label for="versionInput" class="form-label">Версия прошивки</label>
+                                <input type="text" class="form-control" id="versionInput" name="version" placeholder="0.1.1b" required>
+                            </div>
+                            <div class="mb-3" id=modalDatetimePicker>
+                                <label for="releaseDateInput" class="form-label">Дата выпуска</label>
+                                <input type="date" class="form-control" id="releaseDateInput" name="release_date" value="2002-01-01" required>
+                            </div>
+                            <div class="mb-3">
+                                <label for="fileInput" class="form-label">Файл прошивки</label>
+                                <input type="file" class="form-control" id="fileInput" name="file" required>
+                            </div>
+                            <div id="formErrorMessage" class="alert alert-danger" role="alert" style="display: none;"></div>
+                        </form>
+                    </div>
+                    <div class="modal-footer">
+                        <span id="submitAddFirmwareLoading" class="spinner-border spinner-border-sm" role="status" aria-hidden="true" style="display: none;"></span>
+                        <button type="button" class="btn btn-primary" id="submitAddFirmwareBtn">
+                            <span id="submitAddFirmwareBtnText">Добавить</span>
+                        </button>
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Закрыть</button>
+                    </div>
                 </div>
             </div>
         </div>
-    </div>
-    <div class="modal fade" id="deleteFirmwareModal" tabindex="-1" aria-labelledby="deleteFirmwareModalLabel" aria-hidden="true">
-        <div class="modal-dialog">
-            <div class="modal-content">
-                <div class="modal-header">
-                    <h5 class="modal-title" id="deleteFirmwareModalLabel">Подтверждение удаления</h5>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-                </div>
-                <div class="modal-body">
-                    Вы уверены, что хотите удалить прошивку?
-                </div>
-                <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Отмена</button>
-                    <button type="button" class="btn btn-danger" id="confirmDeleteFirmwareBtn">Удалить</button>
+        <div class="modal fade" id="deleteBlockModal" tabindex="-1" aria-labelledby="deleteBlockModalLabel" aria-hidden="true">
+            <div class="modal-dialog">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title" id="deleteBlockModalLabel">Подтверждение удаления</h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                    </div>
+                    <div class="modal-body">
+                        Вы уверены, что хотите удалить этот блок?
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Отмена</button>
+                        <button type="button" class="btn btn-danger" id="confirmDeleteBlockBtn">Удалить</button>
+                    </div>
                 </div>
             </div>
         </div>
-    </div>
-
+        <div class="modal fade" id="deleteFirmwareModal" tabindex="-1" aria-labelledby="deleteFirmwareModalLabel" aria-hidden="true">
+            <div class="modal-dialog">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title" id="deleteFirmwareModalLabel">Подтверждение удаления</h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                    </div>
+                    <div class="modal-body">
+                        Вы уверены, что хотите удалить прошивку?
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Отмена</button>
+                        <button type="button" class="btn btn-danger" id="confirmDeleteFirmwareBtn">Удалить</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    {% endif %}
 {% endblock %}
 
 {% block scripts %}
     <script src="{{ url_for('static', path='js/choices.min.js') }}"></script>
     <script>
+        {% if user.scope == 'admin' %}
+            let blockIdToDelete = null;
+            let firmwareIdToDelete = null;
 
-        let blockIdToDelete = null;
-        let firmwareIdToDelete = null;
-
-        const cleanupModals = () => {
-            $(document.body).removeClass("modal-open");
-            $(".modal-backdrop").remove();
-        }
+            const cleanupModals = () => {
+                $(document.body).removeClass("modal-open");
+                $(".modal-backdrop").remove();
+            }
+        {% endif %}
         function debounce(func, wait) {
             let timeout;
             return function(...args) {
@@ -220,34 +228,36 @@
                 timeout = setTimeout(() => func.apply(context, args), wait);
             };
         }
-
-        async function fetchBlocksAndUpdate() {
-            try {
-                const response = await fetch(
-                    "{{ url_for('get_blocks_full') }}",
-                    {
-                        method: 'GET',
-                        headers: {
-                            'Content-Type': 'application/json',
-                        },
-                    }
-                );
-                const data = await response.json();
-                updateBlockList(data);
-            } catch (error) {
-                console.error('Error fetching blocks:', error);
+        {% if user.scope == 'admin' %}
+            async function fetchBlocksAndUpdate() {
+                try {
+                    const response = await fetch(
+                        "{{ url_for('get_blocks_full') }}",
+                        {
+                            method: 'GET',
+                            headers: {
+                                'Content-Type': 'application/json',
+                            },
+                        }
+                    );
+                    const data = await response.json();
+                    updateBlockList(data);
+                } catch (error) {
+                    console.error('Error fetching blocks:', error);
+                }
             }
-        }
+        {% endif %}
 
-        function updateBlockList(blocks) {
-            const blockFirmwareList = document.getElementById('blockFirmwareList');
-            blockFirmwareList.innerHTML = '';
+        {% if user.scope == 'admin' %}
+            function updateBlockList(blocks) {
+                const blockFirmwareList = document.getElementById('blockFirmwareList');
+                blockFirmwareList.innerHTML = '';
 
-            blocks.forEach(block => {
-                const blockCard = document.createElement('div');
-                blockCard.classList.add('card');
+                blocks.forEach(block => {
+                    const blockCard = document.createElement('div');
+                    blockCard.classList.add('card');
 
-                blockCard.innerHTML = `
+                    blockCard.innerHTML = `
                 <div class="card-body" data-block-id="${block.id}">
                     <div class="card-title d-flex justify-content-between">
                         <a class="link-underline link-underline-opacity-0" href="${`{{ url_for('block_page', block_id="REPLACE_ID") }}`.replace('REPLACE_ID', block.id)}">
@@ -262,31 +272,31 @@
                     </div>
 
                     ${block.firmwares.map(firmware => `
-                <div class="accordion" id="firmwareAccordion-${firmware.id}">
-                <div class="accordion-item mb-2">
-                <h2 class="accordion-header">
-                <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#firmwareCollapse-${firmware.id}" aria-expanded="true" aria-controls="firmwareCollapse-${firmware.id}">
-                ${firmware.controller_name}
-                </button>
-                </h2>
-                <div id="firmwareCollapse-${firmware.id}" class="accordion-collapse collapse" data-bs-parent="#firmwareAccordion-${block.id }">
-                <ul class="list-group-flush">
-                <li class="list-group-item mt-4 mb-4">
-                <div class="fw-bold">Название контроллера: ${firmware.controller_name}</div>
-                <p class="">Версия прошивки: ${firmware.first_version.version}</p>
-                <p class="">Дата выпуска: ${firmware.first_version.release_date}</p>
-                <div class="btn-group" role="group" aria-label="Firmware page button group">
-                <a href="${`{{ url_for('firmware', firmware_id="REPLACE_ID") }}`.replace('REPLACE_ID', firmware.id)}" class="btn btn-outline-primary">Все версии</a>
-                <a href="${`{{ url_for('download_firmware', version_id="REPLACE_ID") }}`.replace('REPLACE_ID', firmware.first_version.id)}" class="btn btn-outline-success">Скачать</a>
-                <button class="btn btn-outline-danger delete-firmware-btn" data-bs-toggle="modal" data-bs-target="#deleteFirmwareModal" data-firmware-id="${firmware.id}">Удалить</button>
-                </div>
-                </li>
+                    <div class="accordion" id="firmwareAccordion-${firmware.id}">
+                    <div class="accordion-item mb-2">
+                    <h2 class="accordion-header">
+                    <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#firmwareCollapse-${firmware.id}" aria-expanded="true" aria-controls="firmwareCollapse-${firmware.id}">
+                    ${firmware.controller_name}
+                    </button>
+                    </h2>
+                    <div id="firmwareCollapse-${firmware.id}" class="accordion-collapse collapse" data-bs-parent="#firmwareAccordion-${block.id }">
+                    <ul class="list-group-flush">
+                    <li class="list-group-item mt-4 mb-4">
+                    <div class="fw-bold">Название контроллера: ${firmware.controller_name}</div>
+                    <p class="">Версия прошивки: ${firmware.first_version.version}</p>
+                    <p class="">Дата выпуска: ${firmware.first_version.release_date}</p>
+                    <div class="btn-group" role="group" aria-label="Firmware page button group">
+                    <a href="${`{{ url_for('firmware', firmware_id="REPLACE_ID") }}`.replace('REPLACE_ID', firmware.id)}" class="btn btn-outline-primary">Все версии</a>
+                    <a href="${`{{ url_for('download_firmware', version_id="REPLACE_ID") }}`.replace('REPLACE_ID', firmware.first_version.id)}" class="btn btn-outline-success">Скачать</a>
+                    <button class="btn btn-outline-danger delete-firmware-btn" data-bs-toggle="modal" data-bs-target="#deleteFirmwareModal" data-firmware-id="${firmware.id}">Удалить</button>
+                    </div>
+                    </li>
 
-                </ul>
-                </div>
-                </div>
-                </div>
-                `).join('')}
+                    </ul>
+                    </div>
+                    </div>
+                    </div>
+                    `).join('')}
 
                 </div>
                 <div class="card-footer text-body-secondary d-flex justify-content-between">
@@ -294,154 +304,162 @@
                     <span>Используется на: <b>${block.cars_count}</b> авто</span>
                 </div>
             `;
-                blockFirmwareList.appendChild(blockCard);
-            });
-
-            document.querySelectorAll('.delete-block-btn').forEach(button => {
-                button.addEventListener('click', function() {
-                    blockIdToDelete = this.getAttribute('data-block-id');
+                    blockFirmwareList.appendChild(blockCard);
                 });
-            });
-            document.querySelectorAll('.delete-firmware-btn').forEach(button => {
-                button.addEventListener('click', function() {
-                    firmwareIdToDelete = this.getAttribute('data-firmware-id');
+
+                document.querySelectorAll('.delete-block-btn').forEach(button => {
+                    button.addEventListener('click', function() {
+                        blockIdToDelete = this.getAttribute('data-block-id');
+                    });
                 });
-            });
-        }
-
-
-        const fetchDataFx = async (formAction, requestData) => {
-            return new Promise((resolve, reject) => {
-                fetch(formAction, {
-                    method: 'POST',
-                    body: requestData
-                }).then(response => response.json())
-                    .then(data => {
-                        if (!data.success) {
-                            reject(data.message);
-                        } else {
-                            resolve(data);
-                        }
-                    })
-            })
-        }
-
-
-        const buildModalRequestData = (formData) => {
-            const requestData = new FormData();
-            requestData.set('file', formData.get('file'));
-            requestData.set('version', JSON.stringify(
-                {version: formData.get('version'), release_date: formData.get('release_date')})
-            )
-            requestData.set('block', JSON.stringify({
-                id: formData.get('block_id'),
-                block_name: formData.get('block_name'),
-                model_name: formData.get('model_name'),
-            })
-            )
-            requestData.set('controller', JSON.stringify({
-                controller_name: formData.get('name'),
-            })
-            )
-            return requestData;
-        }
-
-
-        const modalSubmitEvent = async (event) => {
-            let form = document.getElementById('addFirmwareForm');
-            let submitButton = document.getElementById('submitAddFirmwareBtn');
-            let loadingIcon = document.getElementById('submitAddFirmwareLoading');
-            let errorMessage = document.getElementById('formErrorMessage');
-
-            function reset_loading_icon() {
-                loadingIcon.className = 'spinner-border spinner-border-sm';
-                loadingIcon.style["color"] = null;
-                loadingIcon.style.display = 'none';
+                document.querySelectorAll('.delete-firmware-btn').forEach(button => {
+                    button.addEventListener('click', function() {
+                        firmwareIdToDelete = this.getAttribute('data-firmware-id');
+                    });
+                });
             }
-            function display_loading() {
-                errorMessage.style.display = 'none';
-                errorMessage.innerText = '';
+        {% endif %}
 
-                submitButton.disabled = true;
-                loadingIcon.className = 'spinner-border spinner-border-sm';
-                loadingIcon.style.display = 'inline-block';
+        {% if user.scope == 'admin' %}
+
+            const fetchDataFx = async (formAction, requestData) => {
+                return new Promise((resolve, reject) => {
+                    fetch(formAction, {
+                        method: 'POST',
+                        body: requestData
+                    }).then(response => response.json())
+                        .then(data => {
+                            if (data.status === 422){
+                                reject("Произошла ошибка при вводе данных");
+                            }
+                            if (data.status >= 500){
+                                reject("Произошла ошибка на сервере");
+                            }
+                            if (!data.ok && !data.success) {
+                                reject(data.message || data.detail || "Произошла ошибка при обработке данных");
+                            } else {
+                                resolve(data);
+                            }
+                        })
+                })
             }
-            function display_error(message) {
-                errorMessage.style.display = 'block';
-                errorMessage.innerText = message || 'Ошибка при обработке запроса. Попробуйте ещё раз.';
-                loadingIcon.className = 'bi bi-x-circle';
-                submitButton.disabled = false;
+
+
+            const buildModalRequestData = (formData) => {
+                const requestData = new FormData();
+                requestData.set('file', formData.get('file'));
+                requestData.set('version', JSON.stringify(
+                    {version: formData.get('version'), release_date: formData.get('release_date')})
+                )
+                requestData.set('block', JSON.stringify({
+                    id: formData.get('block_id'),
+                    block_name: formData.get('block_name'),
+                    model_name: formData.get('model_name'),
+                })
+                )
+                requestData.set('controller', JSON.stringify({
+                    controller_name: formData.get('name'),
+                })
+                )
+                return requestData;
+            }
+
+
+            const modalSubmitEvent = async (event) => {
+                let form = document.getElementById('addFirmwareForm');
+                let submitButton = document.getElementById('submitAddFirmwareBtn');
+                let loadingIcon = document.getElementById('submitAddFirmwareLoading');
+                let errorMessage = document.getElementById('formErrorMessage');
+
+                function reset_loading_icon() {
+                    loadingIcon.className = 'spinner-border spinner-border-sm';
+                    loadingIcon.style["color"] = null;
+                    loadingIcon.style.display = 'none';
+                }
+                function display_loading() {
+                    errorMessage.style.display = 'none';
+                    errorMessage.innerText = '';
+
+                    submitButton.disabled = true;
+                    loadingIcon.className = 'spinner-border spinner-border-sm';
+                    loadingIcon.style.display = 'inline-block';
+                }
+                function display_error(message) {
+                    errorMessage.style.display = 'block';
+                    errorMessage.innerText = message || 'Ошибка при обработке запроса. Попробуйте ещё раз.';
+                    loadingIcon.className = 'bi bi-x-circle';
+                    submitButton.disabled = false;
+                    reset_loading_icon();
+                }
+                function display_success() {
+                    loadingIcon.className = "fa-regular fa-circle-check";
+                    loadingIcon.style["color"] = "#63E6BE";
+                    submitButton.disabled = false;
+                }
+
                 reset_loading_icon();
+                display_loading();
+
+                const formData = new FormData(form);
+
+                const requestData = buildModalRequestData(formData);
+
+                try {
+                    await fetchDataFx(form.action, requestData);
+                }
+                catch (error) {
+                    display_error(error);
+                    return;
+                }
+                await fetchBlocksAndUpdate();
+                display_success();
             }
-            function display_success() {
-                loadingIcon.className = "fa-regular fa-circle-check";
-                loadingIcon.style["color"] = "#63E6BE";
-                submitButton.disabled = false;
+        {% endif %}
+        {% if user.scope == 'admin' %}
+            const fetchBlockDelete = async (blockId) => {
+                return new Promise((resolve, reject) => {
+                    fetch("{{ url_for('delete_block') }}", {
+                        method: 'DELETE',
+                        headers: {
+                            'Content-Type': 'application/json',
+                        },
+                        body: JSON.stringify({id: blockId}),
+                    }).then(response => response.json())
+                        .then(data => {
+                            if (!data) {
+                                reject("Error deleting block");
+                            } else {
+                                resolve(data);
+                            }
+                        })
+                })
             }
 
-            reset_loading_icon();
-            display_loading();
-
-            const formData = new FormData(form);
-
-            const requestData = buildModalRequestData(formData);
-
-            try {
-                await fetchDataFx(form.action, requestData);
-            }
-            catch (error) {
-                display_error(error);
-                return;
-            }
-            await fetchBlocksAndUpdate();
-            display_success();
-        }
-
-
-        const fetchBlockDelete = async (blockId) => {
-            return new Promise((resolve, reject) => {
-                fetch("{{ url_for('delete_block') }}", {
-                    method: 'DELETE',
-                    headers: {
-                        'Content-Type': 'application/json',
-                    },
-                    body: JSON.stringify({id: blockId}),
-                }).then(response => response.json())
-                    .then(data => {
-                        if (!data) {
-                            reject("Error deleting block");
-                        } else {
-                            resolve(data);
-                        }
-                    })
-            })
-        }
-
-        const fetchFirmwareDelete = async (firmwareId) => {
-            return new Promise((resolve, reject) => {
-                fetch("{{ url_for('delete_firmware') }}", {
-                    method: 'DELETE',
-                    headers: {
-                        'Content-Type': 'application/json',
-                    },
-                    body: JSON.stringify({id: firmwareId}),
-                }).then(response => response.json())
-                    .then(data => {
-                        if (!data) {
+            const fetchFirmwareDelete = async (firmwareId) => {
+                return new Promise((resolve, reject) => {
+                    fetch("{{ url_for('delete_firmware') }}", {
+                        method: 'DELETE',
+                        headers: {
+                            'Content-Type': 'application/json',
+                        },
+                        body: JSON.stringify({id: firmwareId}),
+                    }).then(response => response.json())
+                        .then(data => {
+                            if (!data) {
                             // Ошибка может вылезти, в том числе если удалено 0 элементов, это ок
-                            reject(`Error deleting firmware ${firmwareId}`);
-                        } else {
-                            resolve(data);
-                        }
-                    })
-            })
-        }
-
+                                reject(`Error deleting firmware ${firmwareId}`);
+                            } else {
+                                resolve(data);
+                            }
+                        })
+                })
+            }
+        {% endif %}
         document.addEventListener('DOMContentLoaded', function() {
-
-            document.getElementById('submitAddFirmwareBtn').addEventListener('click', modalSubmitEvent);
-
-            const block_choices_elements = document.querySelectorAll('.js-choice');
+            {% if user.scope == 'admin' %}
+                document.getElementById('submitAddFirmwareBtn').addEventListener('click', modalSubmitEvent);
+            {% endif %}
+            const block_choices_elements = document.querySelectorAll('.block-js-choice');
 
             for (const block_choices_element of block_choices_elements) {
                 const choices = new Choices(block_choices_element, {
@@ -508,56 +526,123 @@
 
             }
 
-            document.querySelectorAll('.delete-block-btn').forEach(button => {
-                button.addEventListener('click', function() {
-                    blockIdToDelete = this.getAttribute('data-block-id');
+            const car_choices_elements = document.querySelectorAll('.car-js-choice');
+
+            for (const car_choices_element of car_choices_elements) {
+                const car_choices = new Choices(car_choices_element, {
+                    choices: [],
+                    noChoicesText: 'Ничего не найдено',
+                    itemSelectText: "Нажмите, чтобы выбрать",
+                    noResultsText: 'Ничего не найдено',
+                    removeItemButton: true,
+                    searchPlaceholderValue: "Начните вводить данные об авто",
+                    classNames: {
+                        containerOuter: 'choices',
+                        containerInner: 'choices__inner',
+                        input: 'choices__input',
+                        inputCloned: 'choices__input--cloned',
+                        list: 'choices__list',
+                        listItems: 'choices__list--multiple',
+                        listSingle: 'choices__list--single',
+                        listDropdown: 'choices__list--dropdown',
+                        item: 'choices__item',
+                        itemSelectable: 'choices__item--selectable',
+                        itemDisabled: 'choices__item--disabled',
+                        itemOption: 'choices__item--choice',
+                        group: 'choices__group',
+                        groupHeading: 'choices__heading',
+                        button: 'choices__button',
+                        activeState: 'is-active',
+                        focusState: 'is-focused',
+                        openState: 'is-open',
+                        disabledState: 'is-disabled',
+                        highlightedState: 'is-highlighted',
+                        selectedState: 'is-selected',
+                        flippedState: 'is-flipped',
+                    },
+                    valueComparer: (a, b) => a.lower() === b.lower(),
+                    allowHTML: false,
+
                 });
-            });
-
-            document.getElementById('confirmDeleteBlockBtn').addEventListener('click', async function() {
-                if (blockIdToDelete) {
+                async function carsSearchHandler(event) {
+                    const query = event.detail.value;
                     try {
-                        await fetchBlockDelete(blockIdToDelete);
+                        const response = await fetch("{{ url_for('get_cars') }}" + `?query=${query}`);
+                        const data = await response.json();
+                        console.log('API Response for cars:', data);
+                        if (data.length === 0) {
+                            return;
+                        }
+                        const new_choices = data.map(
+                            item => ({value: item.id, label: `${item.numberplate} - ${item.brand} ${item.model}`})
+                        );
+                        car_choices.setChoices(new_choices, 'value', 'label', true);
+                    } catch (error) {
+                        console.error('API Error:', error);
                     }
-                    catch (error) {
-                        console.error('Error:', error);
-                        alert('Ошибка при удалении блока');
-                        return;
-                    }
-                    const deleteBlockModal = document.getElementById('deleteBlockModal');
-                    const modal = bootstrap.Modal.getInstance(deleteBlockModal);
-                    modal.hide();
-                    cleanupModals();
-                    await fetchBlocksAndUpdate();
-
                 }
-            });
+                let delayed_search = debounce(carsSearchHandler, 300);
 
-
-            document.querySelectorAll('.delete-firmware-btn').forEach(button => {
-                button.addEventListener('click', function() {
-                    firmwareIdToDelete = this.getAttribute('data-firmware-id');
+                car_choices_element.addEventListener(
+                    'search',
+                    delayed_search,
+                    false,
+                );
+            }
+            {% if user.scope == 'admin' %}
+                document.querySelectorAll('.delete-block-btn').forEach(button => {
+                    button.addEventListener('click', function() {
+                        blockIdToDelete = this.getAttribute('data-block-id');
+                    });
                 });
-            });
 
-            document.getElementById('confirmDeleteFirmwareBtn').addEventListener('click', async function() {
-                if (firmwareIdToDelete) {
-                    try {
-                        await fetchFirmwareDelete(firmwareIdToDelete);
-                    }
-                    catch (error) {
-                        console.error('Error:', error);
-                        alert('Ошибка при удалении прошивки');
-                        return;
-                    }
-                    const deleteModal = document.getElementById('deleteFirmwareModal');
-                    const modal = bootstrap.Modal.getInstance(deleteModal);
-                    modal.hide();
-                    cleanupModals();
-                    await fetchBlocksAndUpdate();
+                document.getElementById('confirmDeleteBlockBtn').addEventListener('click', async function() {
+                    if (blockIdToDelete) {
+                        try {
+                            await fetchBlockDelete(blockIdToDelete);
+                        }
+                        catch (error) {
+                            console.error('Error:', error);
+                            alert('Ошибка при удалении блока');
+                            return;
+                        }
+                        const deleteBlockModal = document.getElementById('deleteBlockModal');
+                        const modal = bootstrap.Modal.getInstance(deleteBlockModal);
+                        modal.hide();
+                        cleanupModals();
+                        await fetchBlocksAndUpdate();
 
-                }
-            });
+                    }
+                });
+
+
+                document.querySelectorAll('.delete-firmware-btn').forEach(button => {
+                    button.addEventListener('click', function() {
+                        firmwareIdToDelete = this.getAttribute('data-firmware-id');
+                    });
+                });
+
+                document.getElementById('confirmDeleteFirmwareBtn').addEventListener('click', async function() {
+                    if (firmwareIdToDelete) {
+                        try {
+                            await fetchFirmwareDelete(firmwareIdToDelete);
+                        }
+                        catch (error) {
+                            console.error('Error:', error);
+                            alert('Ошибка при удалении прошивки');
+                            return;
+                        }
+                        const deleteModal = document.getElementById('deleteFirmwareModal');
+                        const modal = bootstrap.Modal.getInstance(deleteModal);
+                        modal.hide();
+                        cleanupModals();
+                        await fetchBlocksAndUpdate();
+
+                    }
+                });
+
+            {% endif %}
+
         });
     </script>
 {% endblock %}

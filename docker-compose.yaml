@@ -19,6 +19,25 @@ services:
       retries: 20
       start_period: 3s
 
+  postgres-database:
+    image: postgres:16.3
+    restart: always
+    ports:
+      - "$POSTGRES_PORT:5432"
+    environment:
+      POSTGRES_USER: $POSTGRES_USER
+      POSTGRES_PASSWORD: $POSTGRES_PASSWORD
+      POSTGRES_DB: $POSTGRES_DB
+    volumes:
+      - ./.postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: [ "CMD-SHELL", "sh -c 'pg_isready -U ${POSTGRES_USER} -d ${POSTGRES_DB}'" ]
+      interval: 2s
+      timeout: 10s
+      retries: 5
+      start_period: 5s
+
+
   backend:
     build:
       context: .
