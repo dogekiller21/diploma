@@ -33,17 +33,29 @@ class LinkDispatcher:
         result_data = await result.single()
         return result_data["linked_controllers"]
 
-    async def link_car_to_block(self, car_id: str, block_id: str):
+    async def link_block_to_car(self, car_id: str, block_id: str) -> int:
         query = """
             MATCH (cc:Car) WHERE cc.id = $car_id
             MATCH (bb:Block) WHERE bb.id = $block_id
-            CREATE (cc)-[:LINKED_CAR]->(bb)
-            RETURN count(cc) as linked_cars
+            CREATE (cc)-[r:LINKED_CAR]->(bb)
+            RETURN count(r) as links_count
         """
 
         result = await self.make_request(query=query, car_id=car_id, block_id=block_id)
         result_data = await result.single()
-        return result_data["linked_cars"]
+        return result_data["links_count"]
+
+    async def unlink_block_to_car(self, car_id: str, block_id: str) -> int:
+        query = """
+            MATCH (cc:Car) WHERE cc.id = $car_id
+            MATCH (bb:Block) WHERE bb.id = $block_id
+            DELETE (cc)-[r:LINKED_CAR]->(bb)
+            RETURN count(r) as links_count
+        """
+
+        result = await self.make_request(query=query, car_id=car_id, block_id=block_id)
+        result_data = await result.single()
+        return result_data["links_count"]
 
     async def link_version_to_controller(
         self, version_id: str, controller_id: str

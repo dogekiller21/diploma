@@ -1,0 +1,34 @@
+
+{% extends "base.html" %}
+
+{% block content %}
+    <div class="row justify-content-center">
+        <div class="col-md-6">
+            <h2 class="mb-4">Регистрация</h2>
+            {% if error %}
+                <div class="alert alert-danger" role="alert">
+                    {{ error }}
+                </div>
+            {% endif %}
+            <form method="post" action="{{ url_for('register') }}">
+                <div class="mb-3">
+                    <label for="username" class="form-label">Имя пользователя</label>
+                    <input type="text" class="form-control" id="username" name="username" required>
+                </div>
+                <div class="mb-3">
+                    <label for="password" class="form-label">Пароль</label>
+                    <input type="password" class="form-control" id="password" name="password" required>
+                </div>
+                <div class="mb-3">
+                    <label for="scope-select" class="form-label mt-3">Выберите уровень доступа</label>
+                    <select id="scope-select" name="scope" class="form-select" required>
+                        <option value="user">Пользователь</option>
+                        <option value="admin">Администратор</option>
+                    </select>
+                </div>
+                <button type="submit" class="btn btn-primary">Добавить пользователя</button>
+            </form>
+            <p class="mt-3">Хотите войти в существующий аккаунт? <a href="{{ url_for('login') }}">Войти</a></p>
+        </div>
+    </div>
+{% endblock %}

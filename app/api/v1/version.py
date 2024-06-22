@@ -7,7 +7,7 @@ from fastapi import APIRouter, Depends, UploadFile
 from fastapi.params import File, Form
 from fastapi.responses import StreamingResponse
 
-from app.db.neo4j.links import LinkStorage
+from app.db.neo4j.links.storage import LinkStorage
 from app.db.neo4j.session import build_storage_dependency
 from app.db.neo4j.version.storage import VersionStorage
 from app.models.controller import SingleControllerDataModel

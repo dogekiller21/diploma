@@ -60,7 +60,7 @@ class BlockStorage(BaseStorage):
         query: str | None = None,
     ) -> list[BlockDataModel]:
         db_query = """
-            MATCH (bb:Block)<-[:LINKED_BLOCK]-(cc:Controller)
+            MATCH (bb:Block)
         """
         if query is not None:
             db_query += f"""
@@ -89,7 +89,11 @@ class BlockStorage(BaseStorage):
         return [BlockDataModel.model_validate(item["bb"]) for item in data]
 
     async def get_block_with_controllers_response(
-        self, limit: int, offset: int, block_id: str | None = None
+        self,
+        limit: int,
+        offset: int,
+        block_id: str | None = None,
+        car_id: str | None = None,
     ) -> list[BlockControllersResponseModel]:
         """
         {
@@ -111,10 +115,11 @@ class BlockStorage(BaseStorage):
         }
 
 
-        :param limit:
-        :param offset:
-        :param block_id:
-        :return:
+        :param car_id: str
+        :param limit: int
+        :param offset: int
+        :param block_id: str
+        :return: list[BlockControllersResponseModel]
         """
 
         db_query = """
@@ -126,6 +131,11 @@ class BlockStorage(BaseStorage):
             db_query += f"""
              WHERE
              bb.id = $block_id
+        """
+        if car_id:
+            db_query += f"""
+             WHERE
+             car.id = $car_id
         """
 
         # noinspection SqlNoDataSourceInspection
@@ -163,7 +173,7 @@ class BlockStorage(BaseStorage):
         """
 
         result = await self.make_request(
-            query=db_query, limit=limit, offset=offset, block_id=block_id
+            query=db_query, limit=limit, offset=offset, block_id=block_id, car_id=car_id
         )
         data = await result.data()
         if not data:

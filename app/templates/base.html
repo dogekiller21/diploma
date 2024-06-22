@@ -25,6 +25,7 @@
                     <ul class="navbar-nav me-auto mb-2 mb-lg-0">
                         {% set current_url = request.url.path %}
                         {% set is_main_page = current_url == url_for('main_page').path %}
+                        {% set is_cars_page = current_url == url_for('cars_page').path %}
                         {% set is_firmwares_page = current_url == url_for('firmwares_page').path %}
                         {% set is_about_page = current_url == url_for('about_page').path %}
                         <li class="nav-item">
@@ -34,9 +35,23 @@
                             <a class="nav-link {% if is_firmwares_page %}active{% endif %}" href="{{ url_for('firmwares_page') }}" {% if is_firmwares_page %}aria-current="page"{% endif %}>Прошивки</a>
                         </li>
                         <li class="nav-item">
+                            <a class="nav-link {% if is_cars_page %}active{% endif %}" href="{{ url_for('cars_page') }}" {% if is_cars_page %}aria-current="page"{% endif %}>Авто</a>
+                        </li>
+                        <li class="nav-item">
                             <a class="nav-link {% if is_about_page %}active{% endif %}" href="{{ url_for('about_page') }}" {% if is_about_page %}aria-current="page"{% endif %}>Контакты</a>
                         </li>
                     </ul>
+                    <div class="d-flex gap-3">
+                        {% if user %}
+                            <span class="navbar-text me-3">{{ user.username }}</span>
+                            <a class="btn btn-outline-primary" href="{{ url_for('logout') }}">Выйти</a>
+                            {% if user.scope == 'admin' %}
+                                <a class="btn btn-outline-secondary" href="{{ url_for('register') }}">Добавить</a>
+                            {% endif %}
+                        {% else %}
+                            <a class="btn btn-outline-primary" href="{{ url_for('login') }}">Войти</a>
+                        {% endif %}
+                    </div>
                 </div>
             </div>
         </nav>

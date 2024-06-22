@@ -11,7 +11,11 @@ from app.models.controller import (
     ControllerDataModel,
     SingleControllerDataModel,
 )
-from app.models.response import FirmwareAPIResponse, FirmwareVersionAPIResponse
+from app.models.response import (
+    BaseAPIResponse,
+    FirmwareAPIResponse,
+    FirmwareVersionAPIResponse,
+)
 from app.models.versions import VersionCreateModel, VersionResponseModel
 
 logger = logging.getLogger(__name__)
@@ -101,6 +105,35 @@ class LinkStorage(BaseStorage):
             else:
                 await tx.commit()
                 return FirmwareAPIResponse(success=True, firmware=response)
+
+    async def link_car_block_full(
+        self, car_id: str, block: ModalBlockCreateModel
+    ) -> BaseAPIResponse:
+        async with await self.session.begin_transaction() as tx:
+            try:
+                block_storage = BlockStorage(session=tx)
+                dispatcher = LinkDispatcher(session=tx)
+                if block.id is None:
+                    new_block = await block_storage.create_block_object(block)
+                else:
+                    new_block = await block_storage.get_block_by_id(block_id=block.id)
+
+                if new_block is None:
+                    return BaseAPIResponse(
+                        success=False, message="Cant find corresponding block"
+                    )
+
+                await dispatcher.link_block_to_car(
+                    car_id=car_id, block_id=str(new_block.id)
+                )
+                await tx.commit()
+                return BaseAPIResponse(success=True)
+            except Exception as e:
+                logger.error("Error creating link car to block: %s", e, exc_info=e)
+                await tx.rollback()
+                return BaseAPIResponse(
+                    success=False, message="Error creating link car to block"
+                )
 
     async def create_firmware_version(
         self, firmware_id: str, version: VersionCreateModel

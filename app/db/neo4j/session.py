@@ -15,7 +15,14 @@ async def get_db_session():
     try:
         yield session
     finally:
+        print("Closing session")
         await session.close()
+
+
+async def execute_with_session(query: str, **kwargs) -> Any:
+    async with driver.session(database=DB_NAME) as session:
+        result = await session.run(query, **kwargs)
+        return result
 
 
 TClass = TypeVar("TClass", bound=BaseStorage)

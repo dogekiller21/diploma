@@ -1,0 +1,1125 @@
+{% extends "base.html" %}
+
+{% block head %}
+    <link href="https://cdn.datatables.net/1.13.4/css/dataTables.bootstrap5.min.css" rel="stylesheet">
+    <link href="{{ url_for('static', path='css/choices.min.css') }}" rel="stylesheet">
+{% endblock %}
+
+{% block styles %}
+    <style>
+        .highlight {
+            animation: highlight-animation 1s forwards; !important;
+        }
+
+        @keyframes highlight-animation {
+            from {
+                background-color: #00ff41;
+            }
+            to {
+                background-color: transparent;
+            }
+        }
+
+    </style>
+{% endblock %}
+
+{% block content %}
+    <h1 class="mt-4">База авто</h1>
+    <div class="card">
+        <div class="card-header">Поиск</div>
+        <div class="card-body">
+            <form method="get" action="{{ url_for('cars_page') }}" class="">
+                <div class="row">
+                    <div class="col-md-5">
+                        <label for="block-choice">Блок</label>
+                        <select id="block-choice" class="form-control block-js-choice" name="block">
+                            <option value="">Название блока</option>
+                        </select>
+                    </div>
+
+                    <div class="col-md-5">
+                        <label for="car-choice">Авто</label>
+                        <select id="car-choice" class="form-control block-js-choice" name="car">
+                            <option value="">Название авто</option>
+                        </select>
+                    </div>
+                    <div class="col-md-2 mt-4">
+                        <button type="submit" class="btn btn-primary">Искать</button>
+                    </div>
+                </div>
+
+            </form>
+        </div>
+    </div>
+    <div class="card mt-4">
+        <div class="card-header d-flex justify-content-between">
+            <span class="pt-1">Список</span>
+            <button type="button" class="btn btn-sm btn-success" data-bs-toggle="modal" data-bs-target="#addCarModal">
+                <i class="fa-solid fa-plus"></i>
+            </button>
+        </div>
+        <div class="card-body">
+
+            <div class="vstack gap-3" id="carsList">
+                {% for car in cars %}
+                    <div class="card">
+                        <div class="card-body" data-car-id="{{ car.id }}">
+                            <div class="card-title d-flex justify-content-between">
+                                <h4>{{car.brand}} {{car.model}} {{car.numberplate}}</h4>
+                                <div class="btn-group" role="group" aria-label="Car main button group">
+                                    <button type="button" class="btn btn-primary link-car-block-btn" data-bs-toggle="modal" data-bs-target="#addCarBlockModal" data-car-id="{{ car.id }}">
+                                        <i class="fa-solid fa-chain"></i>
+                                    </button>
+                                    <button type="button" class="btn btn-danger delete-car-btn" data-bs-toggle="modal" data-bs-target="#deleteCarModal" data-car-id="{{ car.id }}">
+                                        <i class="fa-solid fa-xmark"></i>
+                                    </button>
+                                </div>
+                            </div>
+                            <p class="text-muted">{{car.info}}</p>
+
+                            {% for block in car.blocks %}
+                                <div class="accordion" id="blockAccordion-{{ block.id }}">
+                                    <div class="accordion-item mb-2">
+                                        <h2 class="accordion-header">
+                                            <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#blockCollapse-{{ block.id }}" aria-expanded="true" aria-controls="blockCollapse-{{ block.id }}">
+                                                {{ block.block_name }} {{ block.model_name }}
+                                            </button>
+                                        </h2>
+                                        <div id="blockCollapse-{{ block.id }}" class="accordion-collapse collapse" data-bs-parent="#blockAccordion-{{ block.id }}">
+                                            <ul class="list-group-flush">
+                                                <li class="list-group-item mt-4 mb-4">
+                                                    <div class="fw-bold">Название блока: {{ block.block_name }} {{ block.model_name }}</div>
+                                                    <p class="">Всего прошивок: {{ block.firmwares_count }}</p>
+                                                    <div class="btn-group" role="group" aria-label="Block page button group">
+                                                        <a href="{{ url_for('block_page', block_id=block.id|string ) }}" class="btn btn-outline-primary">О блоке</a>
+                                                        <button class="btn btn-outline-danger unlink-block-btn" data-bs-toggle="modal" data-bs-target="#unlinkBlockModal" data-block-id="{{ block.id|string }}" data-car-id="{{ car.id }}">Отвязать</button>
+                                                    </div>
+                                                </li>
+
+                                            </ul>
+                                        </div>
+                                    </div>
+                                </div>
+                            {% endfor %}
+
+                        </div>
+                        <div class="card-footer text-body-secondary">
+                            <span>Всего блоков доступно: <b>{{ car.blocks_count }}</b></span>
+                        </div>
+                    </div>
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+    <div class="modal fade" id="addCarBlockModal" tabindex="-1" aria-labelledby="addCarBlockModalLabel" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="addCarBlockModalLabel">Привязка блока</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <form id="addCarBlockForm" method="post" action="{{ url_for('link_block_to_car') }}">
+                        <div class="mb-3">
+                            <label for="block-choice-input" class="form-label">Блок</label>
+                            <select id="block-choice-input" class="form-control block-js-choice" name="block_id">
+                            </select>
+                        </div>
+                        <div class="mb-3">
+                            <label for="block_name_input" class="form-label">Название блока</label>
+                            <input type="text" class="form-control" id="block_name_input" name="block_name" value="qwerty1234" placeholder="qwerty1234">
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="model_name_input" class="form-label">Модель блока</label>
+                            <input type="text" class="form-control" id="model_name_input" name="model_name" value="qwerty1234" placeholder="qwerty1234">
+                        </div>
+                        <div id="addCarBlockFormErrorMessage" class="alert alert-danger" role="alert" style="display: none;"></div>
+                    </form>
+                </div>
+                <div class="modal-footer">
+                    <span id="submitAddCarBlockLoading" class="spinner-border spinner-border-sm" role="status" aria-hidden="true" style="display: none;"></span>
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Закрыть</button>
+                    <button type="button" class="btn btn-primary" id="submitAddCarBlockBtn">
+                        <span id="submitAddCarBlockBtnText">Привязать</span>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="modal fade" id="addCarModal" tabindex="-1" aria-labelledby="addCarModalLabel" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="addCarModalLabel">Добавление авто</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <form id="addCarForm" method="post" action="{{ url_for('add_car') }}">
+                    <div class="modal-body">
+                        <div class="mb-3">
+                            <label for="numberplate_input" class="form-label">Номер авто</label>
+                            <input type="text" class="form-control" id="numberplate_input" name="numberplate" placeholder="а003то152" pattern="^[А-Яа-я]{1}\d{3}[А-Яа-я]{2}\d{2,3}$" required>
+                            <div class="invalid-feedback">Номер автомобиля должен быть в формате А123БВ45 или А123БВ456</div>
+                        </div>
+                        <div class="mb-3">
+                            <label for="auto_brand_choice">Марка авто</label>
+                            <select id="auto_brand_choice" class="form-control auto-brand-js-choice" name="auto_brand">
+                            </select>
+                        </div>
+                        <div class="mb-3">
+                            <label for="auto_model_choice">Модель авто</label>
+                            <select id="auto_model_choice" class="form-control auto-model-js-choice" name="auto_model">
+                            </select>
+                        </div>
+                        <div class="mb-3">
+                            <label for="info_input" class="form-label">Дополнительная информация</label>
+                            <textarea class="form-control" id="info_input" placeholder="" name="info"></textarea>
+                        </div>
+                        <div id="formErrorMessage" class="alert alert-danger" role="alert" style="display: none;"></div>
+                    </div>
+                    <div class="modal-footer">
+                        <span id="submitAddCarLoading" class="spinner-border spinner-border-sm" role="status" aria-hidden="true" style="display: none;"></span>
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Закрыть</button>
+                        <button type="submit" class="btn btn-primary" id="submitAddCarBtn">
+                            <span id="submitAddCarBtnText">Добавить</span>
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+    <div class="modal fade" id="unlinkBlockModal" tabindex="-1" aria-labelledby="unlinkBlockModalLabel" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="unlinkBlockModalLabel">Подтверждение отвязки</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    Вы уверены, что хотите отвязать этот блок?
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Отмена</button>
+                    <button type="button" class="btn btn-danger" id="confirmUnlinkBlockBtn">Отвязать</button>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="modal fade" id="deleteCarModal" tabindex="-1" aria-labelledby="deleteCarModalLabel" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="deleteCarModalLabel">Подтверждение удаления</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    Вы уверены, что хотите удалить авто?
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Отмена</button>
+                    <button type="button" class="btn btn-danger" id="confirmDeleteCarBtn">Удалить</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+{% endblock %}
+
+{% block scripts %}
+    <script src="{{ url_for('static', path='js/choices.min.js') }}"></script>
+    <script>
+
+        let blockIdToUnlink = null;
+        let carIdToUnlink = null;
+        let carIdToLink = null;
+        let carIdToDelete = null;
+
+        const cleanupModals = () => {
+            $(document.body).removeClass("modal-open");
+            $(".modal-backdrop").remove();
+        }
+        function debounce(func, wait) {
+            let timeout;
+            return function(...args) {
+                const context = this;
+                clearTimeout(timeout);
+                timeout = setTimeout(() => func.apply(context, args), wait);
+            };
+        }
+
+        async function fetchCarsAndUpdate() {
+            try {
+                const response = await fetch(
+                    "{{ url_for('get_cars_full') }}",
+                    {
+                        method: 'GET',
+                        headers: {
+                            'Content-Type': 'application/json',
+                        },
+                    }
+                );
+                const data = await response.json();
+                updateCarsList(data);
+            } catch (error) {
+                console.error('Error fetching blocks:', error);
+            }
+        }
+
+        function updateCarsList(cars) {
+            const carsList = document.getElementById('carsList');
+            carsList.innerHTML = '';
+
+            cars.forEach(car => {
+                const carCard = document.createElement('div');
+                carCard.classList.add('card');
+                carCard.innerHTML = `
+                <div class="card-body" data-car-id="${car.id}">
+                    <div class="card-title d-flex justify-content-between">
+                        <h4>${car.brand} ${car.model} ${car.numberplate}</h4>
+                        <p class="text-muted">${car.info}</p>
+                        <button type="button" class="btn btn-danger delete-car-btn" data-bs-toggle="modal" data-bs-target="#deleteCarModal" data-car-id="${car.id}">
+                            <i class="fa-solid fa-xmark"></i>
+                        </button>
+                    </div>
+                    ${cars.blocks.map(block => `
+                <div class="accordion" id="blockAccordion-${block.id}">
+                <div class="accordion-item mb-2">
+                <h2 class="accordion-header">
+                <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#blockCollapse-${block.id}" aria-expanded="true" aria-controls="blockCollapse-${block.id}">
+                ${block.block_name} ${block.model_name}
+                </button>
+                </h2>
+                <div id="blockCollapse-${block.id}" class="accordion-collapse collapse" data-bs-parent="#blockAccordion-${block.id}">
+                <ul class="list-group-flush">
+                <li class="list-group-item mt-4 mb-4">
+                <div class="fw-bold">Название блока: ${block.block_name} ${block.model_name}</div>
+                <p class="">Всего прошивок: ${block.firmwares_count}</p>
+                <div class="btn-group" role="group" aria-label="Block page button group">
+                <a href="${`{{ url_for('block_page', block_id="REPLACE_ID") }}`.replace("REPLACE_ID", block.id)}" class="btn btn-outline-primary">О блоке</a>
+                <button class="btn btn-outline-danger unlink-block-btn" data-bs-toggle="modal" data-bs-target="#unlinkBlockModal" data-block-id="${block.id}">Удалить</button>
+                </div>
+                </li>
+
+                </ul>
+                </div>
+                </div>
+                </div>
+                `).join('')}
+
+                </div>
+                <div class="card-footer text-body-secondary">
+                    <span>Всего блоков доступно: <b>${car.blocks_count}</b></span>
+                </div>
+                `;
+                carsList.appendChild(carCard);
+            });
+
+            document.querySelectorAll('.unlink-block-btn').forEach(button => {
+                button.addEventListener('click', function() {
+                    blockIdToUnlink = this.getAttribute('data-block-id');
+                    carIdToUnlink = this.getAttribute('data-car-id');
+                });
+            });
+            document.querySelectorAll('.delete-car-btn').forEach(button => {
+                button.addEventListener('click', function() {
+                    carIdToDelete = this.getAttribute('data-car-id');
+                });
+            });
+            document.querySelectorAll('.link-car-block-btn').forEach(button => {
+                button.addEventListener('click', function() {
+                    carIdToLink = this.getAttribute('data-car-id');
+                });
+            });
+        }
+
+
+        const fetchDataFx = async (formAction, requestData) => {
+            return new Promise((resolve, reject) => {
+                fetch(formAction, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: requestData
+                }).then(response => response.json())
+                    .then(data => {
+                        if (data.status === 422){
+                            reject("Произошла ошибка при вводе данных");
+                        }
+                        if (data.status >= 500){
+                            reject("Произошла ошибка на сервере");
+                        }
+                        if (!data.ok || !data.success) {
+                            reject(data.message || "Произошла ошибка при обработке данных");
+                        } else {
+                            resolve(data);
+                        }
+                    })
+            })
+        }
+
+
+        const buildModalRequestData = (data) => {
+            return JSON.stringify({
+                numberplate: data.numberplate,
+                model: data.auto_model,
+                brand: data.auto_brand,
+                info: data.info
+            });
+        }
+
+        const buildAddLinkRequestData = (data) => {
+            return JSON.stringify({
+                car_id: carIdToLink,
+                block: {
+                    id: data.block_id,
+                    block_name: data.block_name,
+                    model_name: data.model_name,
+                }
+            });
+        }
+
+
+        const modalSubmitEvent = async (event) => {
+            let form = document.getElementById('addCarForm');
+            let submitButton = document.getElementById('submitAddCarBtn');
+            let loadingIcon = document.getElementById('submitAddCarLoading');
+            let errorMessage = document.getElementById('formErrorMessage');
+            let numberplateInput = document.getElementById('numberplate_input');
+
+            function reset_loading_icon() {
+                loadingIcon.className = 'spinner-border spinner-border-sm';
+                loadingIcon.style["color"] = null;
+                loadingIcon.style.display = 'none';
+            }
+            function display_loading() {
+                errorMessage.style.display = 'none';
+                errorMessage.innerText = '';
+
+                submitButton.disabled = true;
+                loadingIcon.className = 'spinner-border spinner-border-sm';
+                loadingIcon.style.display = 'inline-block';
+            }
+            function display_error(message) {
+                errorMessage.style.display = 'block';
+                errorMessage.innerText = message || 'Ошибка при обработке запроса. Попробуйте ещё раз.';
+                loadingIcon.className = 'bi bi-x-circle';
+                submitButton.disabled = false;
+                reset_loading_icon();
+            }
+            function reset_error() {
+                errorMessage.style.display = 'none';
+                errorMessage.innerText = '';
+                submitButton.disabled = false;
+                reset_loading_icon();
+
+            }
+            function display_success() {
+                loadingIcon.className = "fa-regular fa-circle-check";
+                loadingIcon.style["color"] = "#63E6BE";
+                submitButton.disabled = false;
+            }
+
+            reset_loading_icon();
+            display_loading();
+            const carNumberPattern = /^[А-Яа-я]{1}\d{3}[А-Яа-я]{2}\d{2,3}$/;
+            if (!carNumberPattern.test(numberplateInput.value)) {
+                numberplateInput.classList.add('is-invalid');
+                reset_error();
+                return;
+            } else {
+                numberplateInput.classList.remove('is-invalid');
+            }
+
+            const requestData = buildModalRequestData(Object.fromEntries(new FormData(form).entries()));
+            console.log("requestData", requestData);
+            try {
+                await fetchDataFx(form.action, requestData);
+            }
+            catch (error) {
+                display_error(error);
+                return;
+            }
+            await fetchCarsAndUpdate();
+            display_success();
+        }
+
+
+        const addCarBlockLinkSubmitEvent = async (event) => {
+            let form = document.getElementById('addCarBlockForm');
+            let submitButton = document.getElementById('submitAddCarBlockBtn');
+            let loadingIcon = document.getElementById('submitAddCarBlockLoading');
+            let errorMessage = document.getElementById('addCarBlockFormErrorMessage');
+
+            function reset_loading_icon() {
+                loadingIcon.className = 'spinner-border spinner-border-sm';
+                loadingIcon.style["color"] = null;
+                loadingIcon.style.display = 'none';
+            }
+            function display_loading() {
+                errorMessage.style.display = 'none';
+                errorMessage.innerText = '';
+
+                submitButton.disabled = true;
+                loadingIcon.className = 'spinner-border spinner-border-sm';
+                loadingIcon.style.display = 'inline-block';
+            }
+            function display_error(message) {
+                errorMessage.style.display = 'block';
+                errorMessage.innerText = message || 'Ошибка при обработке запроса. Попробуйте ещё раз.';
+                loadingIcon.className = 'bi bi-x-circle';
+                submitButton.disabled = false;
+                reset_loading_icon();
+            }
+            function reset_error() {
+                errorMessage.style.display = 'none';
+                errorMessage.innerText = '';
+                submitButton.disabled = false;
+                reset_loading_icon();
+
+            }
+            function display_success() {
+                loadingIcon.className = "fa-regular fa-circle-check";
+                loadingIcon.style["color"] = "#63E6BE";
+                submitButton.disabled = false;
+            }
+
+            reset_loading_icon();
+            display_loading();
+
+            const requestData = buildAddLinkRequestData(Object.fromEntries(new FormData(form).entries()));
+            console.log("requestData", requestData);
+            try {
+                await fetchDataFx(form.action, requestData);
+            }
+            catch (error) {
+                display_error(error);
+                return;
+            }
+            await fetchCarsAndUpdate();
+            display_success();
+        }
+
+
+        const fetchBlockLink = async (blockId, carId) => {
+            return new Promise((resolve, reject) => {
+                fetch("{{ url_for('link_block_to_car') }}", {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({car_id: carId, block_id: blockId}),
+                }).then(response => response.json())
+                    .then(data => {
+                        if (!data) {
+                            reject(`Error adding link for block ${blockId} to car ${carId}`);
+                        } else {
+                            resolve(data);
+                        }
+                    })
+            })
+        }
+
+        const fetchBlockUnlink = async (blockId, carId) => {
+            return new Promise((resolve, reject) => {
+                fetch("{{ url_for('unlink_block_to_car') }}", {
+                    method: 'DELETE',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({car_id: carId, block_id: blockId}),
+                }).then(response => response.json())
+                    .then(data => {
+                        if (!data) {
+                            reject(`Error deleting link for block ${blockId} to car ${carId}`);
+                        } else {
+                            resolve(data);
+                        }
+                    })
+            })
+        }
+
+        const fetchCarDelete = async carId => {
+            return new Promise((resolve, reject) => {
+                fetch("{{ url_for('delete_car') }}", {
+                    method: 'DELETE',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({id: carId}),
+                }).then(response => response.json())
+                    .then(data => {
+                        if (!data) {
+                            // Ошибка может вылезти, в том числе если удалено 0 элементов, это ок
+                            reject(`Error deleting firmware ${carId}`);
+                        } else {
+                            resolve(data);
+                        }
+                    })
+            })
+        }
+
+        document.addEventListener('DOMContentLoaded', function() {
+
+            document.getElementById('submitAddCarBtn').addEventListener('click', modalSubmitEvent);
+
+            const block_choices_elements = document.querySelectorAll('.block-js-choice');
+
+            for (const block_choices_element of block_choices_elements) {
+                const choices = new Choices(block_choices_element, {
+                    choices: [],
+                    noChoicesText: 'Ничего не найдено',
+                    itemSelectText: "Нажмите, чтобы выбрать",
+                    noResultsText: 'Ничего не найдено',
+                    removeItemButton: true,
+                    searchPlaceholderValue: "Начните вводить название блока",
+                    classNames: {
+                        containerOuter: 'choices',
+                        containerInner: 'choices__inner',
+                        input: 'choices__input',
+                        inputCloned: 'choices__input--cloned',
+                        list: 'choices__list',
+                        listItems: 'choices__list--multiple',
+                        listSingle: 'choices__list--single',
+                        listDropdown: 'choices__list--dropdown',
+                        item: 'choices__item',
+                        itemSelectable: 'choices__item--selectable',
+                        itemDisabled: 'choices__item--disabled',
+                        itemOption: 'choices__item--choice',
+                        group: 'choices__group',
+                        groupHeading: 'choices__heading',
+                        button: 'choices__button',
+                        activeState: 'is-active',
+                        focusState: 'is-focused',
+                        openState: 'is-open',
+                        disabledState: 'is-disabled',
+                        highlightedState: 'is-highlighted',
+                        selectedState: 'is-selected',
+                        flippedState: 'is-flipped',
+                    },
+                    valueComparer: (a, b) => a.lower() === b.lower(),
+                    allowHTML: false,
+
+                });
+                async function searchHandler(event) {
+                    const query = event.detail.value;
+                    try {
+                        const response = await fetch("{{ url_for('get_blocks') }}" + `?query=${query}`);
+                        const data = await response.json();
+                        console.log('API Response:', data);
+                        if (data.length === 0) {
+                            return;
+                        }
+                        const new_choices = data.map(
+                            item => ({value: item.id, label: `${item.model_name} - ${item.block_name}`})
+                        );
+                        choices.setChoices(new_choices, 'value', 'label', true);
+                    } catch (error) {
+                        console.error('API Error:', error);
+                    }
+                }
+                let delayed_search = debounce(searchHandler, 500);
+
+                block_choices_element.addEventListener(
+                    'search',
+                    delayed_search,
+                    false,
+                );
+            }
+
+            const auto_brand_choices_elements = document.querySelectorAll('.auto-brand-js-choice');
+
+            for (const element of auto_brand_choices_elements) {
+                const choices = new Choices(element, {
+                    choices: [
+                        {"value": "Acura", "label": "Acura"},
+                        {"value": "Alfa Romeo", "label": "Alfa Romeo"},
+                        {"value": "Aston Martin", "label": "Aston Martin"},
+                        {"value": "Audi", "label": "Audi"},
+                        {"value": "Bentley", "label": "Bentley"},
+                        {"value": "BMW", "label": "BMW"},
+                        {"value": "Bugatti", "label": "Bugatti"},
+                        {"value": "Buick", "label": "Buick"},
+                        {"value": "Cadillac", "label": "Cadillac"},
+                        {"value": "Chevrolet", "label": "Chevrolet"},
+                        {"value": "Chrysler", "label": "Chrysler"},
+                        {"value": "Citroen", "label": "Citroen"},
+                        {"value": "Dacia", "label": "Dacia"},
+                        {"value": "Daewoo", "label": "Daewoo"},
+                        {"value": "Daihatsu", "label": "Daihatsu"},
+                        {"value": "Dodge", "label": "Dodge"},
+                        {"value": "Ferrari", "label": "Ferrari"},
+                        {"value": "Fiat", "label": "Fiat"},
+                        {"value": "Ford", "label": "Ford"},
+                        {"value": "Geely", "label": "Geely"},
+                        {"value": "Genesis", "label": "Genesis"},
+                        {"value": "GMC", "label": "GMC"},
+                        {"value": "Honda", "label": "Honda"},
+                        {"value": "Hummer", "label": "Hummer"},
+                        {"value": "Hyundai", "label": "Hyundai"},
+                        {"value": "Infiniti", "label": "Infiniti"},
+                        {"value": "Jaguar", "label": "Jaguar"},
+                        {"value": "Jeep", "label": "Jeep"},
+                        {"value": "Kia", "label": "Kia"},
+                        {"value": "Lamborghini", "label": "Lamborghini"},
+                        {"value": "Lancia", "label": "Lancia"},
+                        {"value": "Land Rover", "label": "Land Rover"},
+                        {"value": "Lexus", "label": "Lexus"},
+                        {"value": "Lincoln", "label": "Lincoln"},
+                        {"value": "Lotus", "label": "Lotus"},
+                        {"value": "Maserati", "label": "Maserati"},
+                        {"value": "Mazda", "label": "Mazda"},
+                        {"value": "McLaren", "label": "McLaren"},
+                        {"value": "Mercedes-Benz", "label": "Mercedes-Benz"},
+                        {"value": "Mercury", "label": "Mercury"},
+                        {"value": "Mini", "label": "Mini"},
+                        {"value": "Mitsubishi", "label": "Mitsubishi"},
+                        {"value": "Nissan", "label": "Nissan"},
+                        {"value": "Opel", "label": "Opel"},
+                        {"value": "Peugeot", "label": "Peugeot"},
+                        {"value": "Porsche", "label": "Porsche"},
+                        {"value": "Ram", "label": "Ram"},
+                        {"value": "Renault", "label": "Renault"},
+                        {"value": "Rolls-Royce", "label": "Rolls-Royce"},
+                        {"value": "Saab", "label": "Saab"},
+                        {"value": "Saturn", "label": "Saturn"},
+                        {"value": "Scion", "label": "Scion"},
+                        {"value": "Seat", "label": "Seat"},
+                        {"value": "Skoda", "label": "Skoda"},
+                        {"value": "Smart", "label": "Smart"},
+                        {"value": "Subaru", "label": "Subaru"},
+                        {"value": "Suzuki", "label": "Suzuki"},
+                        {"value": "Tesla", "label": "Tesla"},
+                        {"value": "Toyota", "label": "Toyota"},
+                        {"value": "Volkswagen", "label": "Volkswagen"},
+                        {"value": "Volvo", "label": "Volvo"},
+                        {"value": "Zotye", "label": "Zotye"},
+                        {"value": "Acura", "label": "Acura"},
+                        {"value": "Alpina", "label": "Alpina"},
+                        {"value": "Ariel", "label": "Ariel"},
+                        {"value": "Ascari", "label": "Ascari"},
+                        {"value": "Baojun", "label": "Baojun"},
+                        {"value": "Borgward", "label": "Borgward"},
+                        {"value": "Brilliance", "label": "Brilliance"},
+                        {"value": "BYD", "label": "BYD"},
+                        {"value": "Changan", "label": "Changan"},
+                        {"value": "Changfeng", "label": "Changfeng"},
+                        {"value": "Chery", "label": "Chery"},
+                        {"value": "Daihatsu", "label": "Daihatsu"},
+                        {"value": "FAW", "label": "FAW"},
+                        {"value": "Ferrari", "label": "Ferrari"},
+                        {"value": "Fisker", "label": "Fisker"},
+                        {"value": "Foton", "label": "Foton"},
+                        {"value": "Great Wall", "label": "Great Wall"},
+                        {"value": "Haima", "label": "Haima"},
+                        {"value": "Haval", "label": "Haval"},
+                        {"value": "Hawtai", "label": "Hawtai"},
+                        {"value": "Holden", "label": "Holden"},
+                        {"value": "Hongqi", "label": "Hongqi"},
+                        {"value": "Huanghai", "label": "Huanghai"},
+                        {"value": "Isuzu", "label": "Isuzu"},
+                        {"value": "JAC", "label": "JAC"},
+                        {"value": "Jiangling", "label": "Jiangling"},
+                        {"value": "JMC", "label": "JMC"},
+                        {"value": "Karma", "label": "Karma"},
+                        {"value": "Koenigsegg", "label": "Koenigsegg"},
+                        {"value": "Lada", "label": "Lada"},
+                        {"value": "Lamborghini", "label": "Lamborghini"},
+                        {"value": "Landwind", "label": "Landwind"},
+                        {"value": "Lexus", "label": "Lexus"},
+                        {"value": "Lucid", "label": "Lucid"},
+                        {"value": "Luxgen", "label": "Luxgen"},
+                        {"value": "Mahindra", "label": "Mahindra"},
+                        {"value": "Maruti Suzuki", "label": "Maruti Suzuki"},
+                        {"value": "Maybach", "label": "Maybach"},
+                        {"value": "MG", "label": "MG"},
+                        {"value": "NIO", "label": "NIO"},
+                        {"value": "Pagani", "label": "Pagani"},
+                        {"value": "Perodua", "label": "Perodua"},
+                        {"value": "Proton", "label": "Proton"},
+                        {"value": "Qoros", "label": "Qoros"},
+                        {"value": "Rimac", "label": "Rimac"},
+                        {"value": "Rivian", "label": "Rivian"},
+                        {"value": "Roewe", "label": "Roewe"},
+                        {"value": "Saipa", "label": "Saipa"},
+                        {"value": "Saleen", "label": "Saleen"},
+                        {"value": "Soueast", "label": "Soueast"},
+                        {"value": "Tata", "label": "Tata"},
+                        {"value": "Vauxhall", "label": "Vauxhall"},
+                        {"value": "Wiesmann", "label": "Wiesmann"},
+                        {"value": "XPeng", "label": "XPeng"},
+                        {"value": "Zastava", "label": "Zastava"}
+                    ],
+                    noChoicesText: 'Ничего не найдено',
+                    itemSelectText: "Нажмите, чтобы выбрать",
+                    noResultsText: 'Ничего не найдено',
+                    searchPlaceholderValue: "Начните вводить модель авто",
+                    classNames: {
+                        containerOuter: 'choices',
+                        containerInner: 'choices__inner',
+                        input: 'choices__input',
+                        inputCloned: 'choices__input--cloned',
+                        list: 'choices__list',
+                        listItems: 'choices__list--multiple',
+                        listSingle: 'choices__list--single',
+                        listDropdown: 'choices__list--dropdown',
+                        item: 'choices__item',
+                        itemSelectable: 'choices__item--selectable',
+                        itemDisabled: 'choices__item--disabled',
+                        itemOption: 'choices__item--choice',
+                        group: 'choices__group',
+                        groupHeading: 'choices__heading',
+                        button: 'choices__button',
+                        activeState: 'is-active',
+                        focusState: 'is-focused',
+                        openState: 'is-open',
+                        disabledState: 'is-disabled',
+                        highlightedState: 'is-highlighted',
+                        selectedState: 'is-selected',
+                        flippedState: 'is-flipped',
+                    },
+                    valueComparer: (a, b) => a.lower() === b.lower(),
+                    allowHTML: false,
+
+                });
+            }
+
+            const auto_model_choices_elements = document.querySelectorAll('.auto-model-js-choice');
+
+            for (const element of auto_model_choices_elements) {
+                const choices = new Choices(element, {
+                    choices: [
+                        {"value": "ILX", "label": "ILX"},
+                        {"value": "MDX", "label": "MDX"},
+                        {"value": "NSX", "label": "NSX"},
+                        {"value": "RDX", "label": "RDX"},
+                        {"value": "RLX", "label": "RLX"},
+                        {"value": "TLX", "label": "TLX"},
+                        {"value": "4C", "label": "4C"},
+                        {"value": "Giulia", "label": "Giulia"},
+                        {"value": "Stelvio", "label": "Stelvio"},
+                        {"value": "DB11", "label": "DB11"},
+                        {"value": "DBX", "label": "DBX"},
+                        {"value": "Vantage", "label": "Vantage"},
+                        {"value": "Vanquish", "label": "Vanquish"},
+                        {"value": "A3", "label": "A3"},
+                        {"value": "A4", "label": "A4"},
+                        {"value": "A5", "label": "A5"},
+                        {"value": "A6", "label": "A6"},
+                        {"value": "A7", "label": "A7"},
+                        {"value": "A8", "label": "A8"},
+                        {"value": "Q3", "label": "Q3"},
+                        {"value": "Q5", "label": "Q5"},
+                        {"value": "Q7", "label": "Q7"},
+                        {"value": "Q8", "label": "Q8"},
+                        {"value": "R8", "label": "R8"},
+                        {"value": "TT", "label": "TT"},
+                        {"value": "Bentayga", "label": "Bentayga"},
+                        {"value": "Continental", "label": "Continental"},
+                        {"value": "Flying Spur", "label": "Flying Spur"},
+                        {"value": "2 Series", "label": "2 Series"},
+                        {"value": "3 Series", "label": "3 Series"},
+                        {"value": "4 Series", "label": "4 Series"},
+                        {"value": "5 Series", "label": "5 Series"},
+                        {"value": "7 Series", "label": "7 Series"},
+                        {"value": "8 Series", "label": "8 Series"},
+                        {"value": "X1", "label": "X1"},
+                        {"value": "X3", "label": "X3"},
+                        {"value": "X4", "label": "X4"},
+                        {"value": "X5", "label": "X5"},
+                        {"value": "X6", "label": "X6"},
+                        {"value": "X7", "label": "X7"},
+                        {"value": "Z4", "label": "Z4"},
+                        {"value": "Chiron", "label": "Chiron"},
+                        {"value": "Veyron", "label": "Veyron"},
+                        {"value": "Enclave", "label": "Enclave"},
+                        {"value": "Encore", "label": "Encore"},
+                        {"value": "Envision", "label": "Envision"},
+                        {"value": "ATS", "label": "ATS"},
+                        {"value": "CT4", "label": "CT4"},
+                        {"value": "CT5", "label": "CT5"},
+                        {"value": "CT6", "label": "CT6"},
+                        {"value": "Escalade", "label": "Escalade"},
+                        {"value": "XT4", "label": "XT4"},
+                        {"value": "XT5", "label": "XT5"},
+                        {"value": "XT6", "label": "XT6"},
+                        {"value": "Blazer", "label": "Blazer"},
+                        {"value": "Bolt", "label": "Bolt"},
+                        {"value": "Camaro", "label": "Camaro"},
+                        {"value": "Colorado", "label": "Colorado"},
+                        {"value": "Corvette", "label": "Corvette"},
+                        {"value": "Equinox", "label": "Equinox"},
+                        {"value": "Impala", "label": "Impala"},
+                        {"value": "Malibu", "label": "Malibu"},
+                        {"value": "Silverado", "label": "Silverado"},
+                        {"value": "Spark", "label": "Spark"},
+                        {"value": "Suburban", "label": "Suburban"},
+                        {"value": "Tahoe", "label": "Tahoe"},
+                        {"value": "Traverse", "label": "Traverse"},
+                        {"value": "Trax", "label": "Trax"},
+                        {"value": "Challenger", "label": "Challenger"},
+                        {"value": "Charger", "label": "Charger"},
+                        {"value": "Durango", "label": "Durango"},
+                        {"value": "Journey", "label": "Journey"},
+                        {"value": "488", "label": "488"},
+                        {"value": "812", "label": "812"},
+                        {"value": "F8", "label": "F8"},
+                        {"value": "Portofino", "label": "Portofino"},
+                        {"value": "Roma", "label": "Roma"},
+                        {"value": "Fiesta", "label": "Fiesta"},
+                        {"value": "Focus", "label": "Focus"},
+                        {"value": "Fusion", "label": "Fusion"},
+                        {"value": "Mustang", "label": "Mustang"},
+                        {"value": "Bronco", "label": "Bronco"},
+                        {"value": "EcoSport", "label": "EcoSport"},
+                        {"value": "Edge", "label": "Edge"},
+                        {"value": "Escape", "label": "Escape"},
+                        {"value": "Expedition", "label": "Expedition"},
+                        {"value": "Explorer", "label": "Explorer"},
+                        {"value": "F-150", "label": "F-150"},
+                        {"value": "Ranger", "label": "Ranger"},
+                        {"value": "Taurus", "label": "Taurus"},
+                        {"value": "Yukon", "label": "Yukon"},
+                        {"value": "Yukon XL", "label": "Yukon XL"},
+                        {"value": "Civic", "label": "Civic"},
+                        {"value": "Accord", "label": "Accord"},
+                        {"value": "CR-V", "label": "CR-V"},
+                        {"value": "HR-V", "label": "HR-V"},
+                        {"value": "Passport", "label": "Passport"},
+                        {"value": "Pilot", "label": "Pilot"},
+                        {"value": "Ridgeline", "label": "Ridgeline"},
+                        {"value": "Santa Fe", "label": "Santa Fe"},
+                        {"value": "Sonata", "label": "Sonata"},
+                        {"value": "Elantra", "label": "Elantra"},
+                        {"value": "Tucson", "label": "Tucson"},
+                        {"value": "Kona", "label": "Kona"},
+                        {"value": "Palisade", "label": "Palisade"},
+                        {"value": "Q50", "label": "Q50"},
+                        {"value": "Q60", "label": "Q60"},
+                        {"value": "QX50", "label": "QX50"},
+                        {"value": "QX60", "label": "QX60"},
+                        {"value": "QX80", "label": "QX80"},
+                        {"value": "XE", "label": "XE"},
+                        {"value": "XF", "label": "XF"},
+                        {"value": "XJ", "label": "XJ"},
+                        {"value": "E-PACE", "label": "E-PACE"},
+                        {"value": "F-PACE", "label": "F-PACE"},
+                        {"value": "F-TYPE", "label": "F-TYPE"},
+                        {"value": "Cherokee", "label": "Cherokee"},
+                        {"value": "Compass", "label": "Compass"},
+                        {"value": "Gladiator", "label": "Gladiator"},
+                        {"value": "Grand Cherokee", "label": "Grand Cherokee"},
+                        {"value": "Renegade", "label": "Renegade"},
+                        {"value": "Wrangler", "label": "Wrangler"},
+                        {"value": "Forte", "label": "Forte"},
+                        {"value": "Optima", "label": "Optima"},
+                        {"value": "Rio", "label": "Rio"},
+                        {"value": "Seltos", "label": "Seltos"},
+                        {"value": "Sorento", "label": "Sorento"},
+                        {"value": "Soul", "label": "Soul"},
+                        {"value": "Sportage", "label": "Sportage"},
+                        {"value": "Stinger", "label": "Stinger"},
+                        {"value": "Urus", "label": "Urus"},
+                        {"value": "Huracan", "label": "Huracan"},
+                        {"value": "Aventador", "label": "Aventador"},
+                        {"value": "Range Rover", "label": "Range Rover"},
+                        {"value": "Range Rover Sport", "label": "Range Rover Sport"},
+                        {"value": "Range Rover Velar", "label": "Range Rover Velar"},
+                        {"value": "Discovery", "label": "Discovery"},
+                        {"value": "Discovery Sport", "label": "Discovery Sport"},
+                        {"value": "Defender", "label": "Defender"},
+                        {"value": "CT200h", "label": "CT200h"},
+                        {"value": "ES", "label": "ES"},
+                        {"value": "GS", "label": "GS"},
+                        {"value": "GX", "label": "GX"},
+                        {"value": "IS", "label": "IS"},
+                        {"value": "LC", "label": "LC"},
+                        {"value": "LS", "label": "LS"},
+                        {"value": "LX", "label": "LX"},
+                        {"value": "NX", "label": "NX"},
+                        {"value": "RC", "label": "RC"},
+                        {"value": "RX", "label": "RX"},
+                        {"value": "UX", "label": "UX"},
+                        {"value": "Aviator", "label": "Aviator"},
+                        {"value": "Corsair", "label": "Corsair"},
+                        {"value": "Nautilus", "label": "Nautilus"},
+                        {"value": "Navigator", "label": "Navigator"},
+                        {"value": "Elantra", "label": "Elantra"},
+                        {"value": "Ghibli", "label": "Ghibli"},
+                        {"value": "Levante", "label": "Levante"},
+                        {"value": "Quattroporte", "label": "Quattroporte"},
+                        {"value": "Mazda3", "label": "Mazda3"},
+                        {"value": "Mazda6", "label": "Mazda6"},
+                        {"value": "CX-3", "label": "CX-3"},
+                        {"value": "CX-5", "label": "CX-5"},
+                        {"value": "CX-9", "label": "CX-9"},
+                        {"value": "MX-5 Miata", "label": "MX-5 Miata"},
+                        {"value": "GLE", "label": "GLE"},
+                        {"value": "GLA", "label": "GLA"},
+                        {"value": "GLC", "label": "GLC"},
+                        {"value": "GLS", "label": "GLS"},
+                        {"value": "EQC", "label": "EQC"},
+                        {"value": "E-Class", "label": "E-Class"},
+                        {"value": "C-Class", "label": "C-Class"},
+                        {"value": "S-Class", "label": "S-Class"},
+                        {"value": "A-Class", "label": "A-Class"},
+                        {"value": "CLA", "label": "CLA"},
+                        {"value": "CLS", "label": "CLS"},
+                        {"value": "G-Class", "label": "G-Class"},
+                        {"value": "Sprinter", "label": "Sprinter"},
+                        {"value": "Outlander", "label": "Outlander"},
+                        {"value": "Eclipse Cross", "label": "Eclipse Cross"},
+                        {"value": "Mirage", "label": "Mirage"},
+                        {"value": "Altima", "label": "Altima"},
+                        {"value": "GT-R", "label": "GT-R"},
+                        {"value": "Leaf", "label": "Leaf"},
+                        {"value": "Maxima", "label": "Maxima"},
+                        {"value": "Murano", "label": "Murano"},
+                        {"value": "Pathfinder", "label": "Pathfinder"},
+                        {"value": "Rogue", "label": "Rogue"},
+                        {"value": "Sentra", "label": "Sentra"},
+                        {"value": "Titan", "label": "Titan"},
+                        {"value": "Versa", "label": "Versa"},
+                        {"value": "Juke", "label": "Juke"},
+                        {"value": "370Z", "label": "370Z"},
+                        {"value": "GTC4Lusso", "label": "GTC4Lusso"},
+                        {"value": "Macan", "label": "Macan"},
+                        {"value": "Cayenne", "label": "Cayenne"},
+                        {"value": "Taycan", "label": "Taycan"},
+                        {"value": "Panamera", "label": "Panamera"},
+                        {"value": "911", "label": "911"},
+                        {"value": "718", "label": "718"},
+                        {"value": "Ram 1500", "label": "Ram 1500"},
+                        {"value": "Ram 2500", "label": "Ram 2500"},
+                        {"value": "Ram 3500", "label": "Ram 3500"},
+                        {"value": "Cullinan", "label": "Cullinan"},
+                        {"value": "Ghost", "label": "Ghost"},
+                        {"value": "Phantom", "label": "Phantom"},
+                        {"value": "Wraith", "label": "Wraith"},
+                        {"value": "Dawn", "label": "Dawn"},
+                        {"value": "Model S", "label": "Model S"},
+                        {"value": "Model 3", "label": "Model 3"},
+                        {"value": "Model X", "label": "Model X"},
+                        {"value": "Model Y", "label": "Model Y"},
+                        {"value": "Supra", "label": "Supra"},
+                        {"value": "Avalon", "label": "Avalon"},
+                        {"value": "Camry", "label": "Camry"},
+                        {"value": "Corolla", "label": "Corolla"},
+                        {"value": "Highlander", "label": "Highlander"},
+                        {"value": "Land Cruiser", "label": "Land Cruiser"},
+                        {"value": "Prius", "label": "Prius"},
+                        {"value": "RAV4", "label": "RAV4"},
+                        {"value": "Sequoia", "label": "Sequoia"},
+                        {"value": "Sienna", "label": "Sienna"},
+                        {"value": "Tacoma", "label": "Tacoma"},
+                        {"value": "Tundra", "label": "Tundra"},
+                        {"value": "Atlas", "label": "Atlas"},
+                        {"value": "Beetle", "label": "Beetle"},
+                        {"value": "Golf", "label": "Golf"},
+                        {"value": "Jetta", "label": "Jetta"},
+                        {"value": "Passat", "label": "Passat"},
+                        {"value": "Tiguan", "label": "Tiguan"},
+                        {"value": "XC40", "label": "XC40"},
+                        {"value": "XC60", "label": "XC60"},
+                        {"value": "XC90", "label": "XC90"},
+                        {"value": "S60", "label": "S60"},
+                        {"value": "S90", "label": "S90"},
+                        {"value": "V60", "label": "V60"},
+                        {"value": "V90", "label": "V90"}
+                    ],
+                    noChoicesText: 'Ничего не найдено',
+                    itemSelectText: "Нажмите, чтобы выбрать",
+                    noResultsText: 'Ничего не найдено',
+                    searchPlaceholderValue: "Начните вводить модель авто",
+                    classNames: {
+                        containerOuter: 'choices',
+                        containerInner: 'choices__inner',
+                        input: 'choices__input',
+                        inputCloned: 'choices__input--cloned',
+                        list: 'choices__list',
+                        listItems: 'choices__list--multiple',
+                        listSingle: 'choices__list--single',
+                        listDropdown: 'choices__list--dropdown',
+                        item: 'choices__item',
+                        itemSelectable: 'choices__item--selectable',
+                        itemDisabled: 'choices__item--disabled',
+                        itemOption: 'choices__item--choice',
+                        group: 'choices__group',
+                        groupHeading: 'choices__heading',
+                        button: 'choices__button',
+                        activeState: 'is-active',
+                        focusState: 'is-focused',
+                        openState: 'is-open',
+                        disabledState: 'is-disabled',
+                        highlightedState: 'is-highlighted',
+                        selectedState: 'is-selected',
+                        flippedState: 'is-flipped',
+                    },
+                    valueComparer: (a, b) => a.lower() === b.lower(),
+                    allowHTML: false,
+
+                });
+            }
+
+            document.querySelectorAll('.unlink-block-btn').forEach(button => {
+                button.addEventListener('click', function() {
+                    blockIdToUnlink = this.getAttribute('data-block-id');
+                    carIdToUnlink = this.getAttribute('data-car-id');
+                });
+            });
+
+            document.querySelectorAll('.link-car-block-btn').forEach(button => {
+                button.addEventListener('click', function() {
+                    carIdToLink = this.getAttribute('data-car-id');
+                });
+            });
+
+            document.getElementById('confirmUnlinkBlockBtn').addEventListener('click', async function() {
+                if (blockIdToUnlink) {
+                    try {
+                        await fetchBlockUnlink(blockIdToUnlink, carIdToUnlink);
+                    }
+                    catch (error) {
+                        console.error('Error:', error);
+                        alert('Ошибка при отвязке блока');
+                        return;
+                    }
+                    const unlinkBlockModal = document.getElementById('unlinkBlockModal');
+                    const modal = bootstrap.Modal.getInstance(unlinkBlockModal);
+                    modal.hide();
+                    cleanupModals();
+                    await fetchCarsAndUpdate();
+
+                }
+            });
+
+            document.getElementById('submitAddCarBlockBtn').addEventListener('click', addCarBlockLinkSubmitEvent);
+
+
+            document.querySelectorAll('.delete-car-btn').forEach(button => {
+                button.addEventListener('click', function() {
+                    carIdToDelete = this.getAttribute('data-car-id');
+                });
+            });
+
+            document.getElementById('confirmDeleteCarBtn').addEventListener('click', async function() {
+                if (carIdToDelete) {
+                    try {
+                        await fetchCarDelete(carIdToDelete);
+                    }
+                    catch (error) {
+                        console.error('Error:', error);
+                        alert('Ошибка при удалении прошивки');
+                        return;
+                    }
+                    const deleteModal = document.getElementById('deleteCarModal');
+                    const modal = bootstrap.Modal.getInstance(deleteModal);
+                    modal.hide();
+                    cleanupModals();
+                    await fetchCarsAndUpdate();
+
+                }
+            });
+        });
+    </script>
+{% endblock %}

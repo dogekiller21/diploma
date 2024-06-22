@@ -1,0 +1,24 @@
+{% extends "base.html" %}
+
+{% block head %}
+{% endblock %}
+
+{% block styles %}
+{% endblock %}
+
+{% block content %}
+    <div class="d-flex align-items-center justify-content-center text-center h-100">
+        <div class="row">
+            <div class="col-12">
+                <div class="error-code text-primary display-1 fw-bold mt-5">404</div>
+                <div class="error-message text-secondary h4 mt-5">Упс! Такой страницы не существует.</div>
+                <div class="home-button mt-5">
+                    <a href="{{ url_for('main_page') }}" class="btn btn-primary">На главную</a>
+                </div>
+            </div>
+        </div>
+    </div>
+{% endblock %}
+
+{% block scripts %}
+{% endblock %}

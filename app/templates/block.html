@@ -24,36 +24,11 @@
 {% endblock %}
 
 {% block content %}
-    <h1 class="mt-4">База блоков</h1>
-    <div class="card">
-        <div class="card-header">Поиск</div>
-        <div class="card-body">
-            <form method="get" action="{{ url_for('firmwares_page') }}" class="">
-                <div class="row">
-                    <div class="col-md-5">
-                        <label for="block-choice">Блок</label>
-                        <select id="block-choice" class="form-control js-choice" name="block">
-                            <option value="">Название блока</option>
-                        </select>
-                    </div>
+    <h1 class="mt-4">Информация о блоке</h1>
 
-                    <div class="col-md-5">
-                        <label for="car-choice">Авто</label>
-                        <select id="car-choice" class="form-control js-choice" name="car">
-                            <option value="">Название авто</option>
-                        </select>
-                    </div>
-                    <div class="col-md-2 mt-4">
-                        <button type="submit" class="btn btn-primary">Искать</button>
-                    </div>
-                </div>
-
-            </form>
-        </div>
-    </div>
     <div class="card mt-4">
         <div class="card-header d-flex justify-content-between">
-            <span class="pt-1">Список</span>
+            <span class="pt-1"></span>
             <button type="button" class="btn btn-sm btn-success" data-bs-toggle="modal" data-bs-target="#addFirmwareModal">
                 <i class="fa-solid fa-plus"></i>
             </button>
@@ -61,55 +36,48 @@
         <div class="card-body">
 
             <div class="vstack gap-3" id="blockFirmwareList">
-                {% for block in blocks %}
-                    <div class="card">
-                        <div class="card-body" data-block-id="{{ block.id }}">
-                            <div class="card-title d-flex justify-content-between">
-                                <a class="link-underline link-underline-opacity-0" href="{{ url_for('block_page', block_id=block.id) }}">
-                                    <div class="d-flex gap-1">
-                                        <h4>{{ block.model_name }} {{ block.block_name }}</h4>
-                                        <i class="fa-solid fa-arrow-up-right-from-square"></i>
-                                    </div>
-                                </a>
-                                <button type="button" class="btn btn-danger delete-block-btn" data-bs-toggle="modal" data-bs-target="#deleteBlockModal" data-block-id="{{ block.id }}">
-                                    <i class="fa-solid fa-xmark"></i>
-                                </button>
-                            </div>
+                <div class="card">
+                    <div class="card-body" data-block-id="{{ block.id }}">
+                        <div class="card-title d-flex justify-content-between">
+                            <h4>{{ block.model_name }} {{ block.block_name }}</h4>
+                            <button type="button" class="btn btn-danger delete-block-btn" data-bs-toggle="modal" data-bs-target="#deleteBlockModal" data-block-id="{{ block.id }}">
+                                <i class="fa-solid fa-xmark"></i>
+                            </button>
+                        </div>
 
-                            {% for firmware in block.firmwares %}
-                                <div class="accordion" id="firmwareAccordion-{{ firmware.id }}">
-                                    <div class="accordion-item mb-2">
-                                        <h2 class="accordion-header">
-                                            <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#firmwareCollapse-{{ firmware.id }}" aria-expanded="true" aria-controls="firmwareCollapse-{{ firmware.id }}">
-                                                {{ firmware.controller_name }}
-                                            </button>
-                                        </h2>
-                                        <div id="firmwareCollapse-{{ firmware.id }}" class="accordion-collapse collapse" data-bs-parent="#firmwareAccordion-{{ block.id }}">
-                                            <ul class="list-group-flush">
-                                                <li class="list-group-item mt-4 mb-4">
-                                                    <div class="fw-bold">Название контроллера: {{ firmware.controller_name }}</div>
-                                                    <p class="">Версия прошивки: {{ firmware.first_version.version }}</p>
-                                                    <p class="">Дата выпуска: {{ firmware.first_version.release_date }}</p>
-                                                    <div class="btn-group" role="group" aria-label="Firmware page button group">
-                                                        <a href="{{ url_for('firmware', firmware_id=firmware.id|string) }}" class="btn btn-outline-primary">Все версии</a>
-                                                        <a href="{{ url_for('download_firmware', version_id=firmware.first_version.id|string ) }}" class="btn btn-outline-success">Скачать</a>
-                                                        <button class="btn btn-outline-danger delete-firmware-btn" data-bs-toggle="modal" data-bs-target="#deleteFirmwareModal" data-firmware-id="{{ firmware.id|string }}">Удалить</button>
-                                                    </div>
-                                                </li>
+                        {% for firmware in block.firmwares %}
+                            <div class="accordion" id="firmwareAccordion-{{ firmware.id }}">
+                                <div class="accordion-item mb-2">
+                                    <h2 class="accordion-header">
+                                        <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#firmwareCollapse-{{ firmware.id }}" aria-expanded="true" aria-controls="firmwareCollapse-{{ firmware.id }}">
+                                            {{ firmware.controller_name }}
+                                        </button>
+                                    </h2>
+                                    <div id="firmwareCollapse-{{ firmware.id }}" class="accordion-collapse collapse" data-bs-parent="#firmwareAccordion-{{ block.id }}">
+                                        <ul class="list-group-flush">
+                                            <li class="list-group-item mt-4 mb-4">
+                                                <div class="fw-bold">Название контроллера: {{ firmware.controller_name }}</div>
+                                                <p class="">Версия прошивки: {{ firmware.first_version.version }}</p>
+                                                <p class="">Дата выпуска: {{ firmware.first_version.release_date }}</p>
+                                                <div class="btn-group" role="group" aria-label="Firmware page button group">
+                                                    <a href="{{ url_for('firmware', firmware_id=firmware.id|string) }}" class="btn btn-outline-primary">Все версии</a>
+                                                    <a href="{{ url_for('download_firmware', version_id=firmware.first_version.id|string ) }}" class="btn btn-outline-success">Скачать</a>
+                                                    <button class="btn btn-outline-danger delete-firmware-btn" data-bs-toggle="modal" data-bs-target="#deleteFirmwareModal" data-firmware-id="{{ firmware.id|string }}">Удалить</button>
+                                                </div>
+                                            </li>
 
-                                            </ul>
-                                        </div>
+                                        </ul>
                                     </div>
                                 </div>
-                            {% endfor %}
+                            </div>
+                        {% endfor %}
 
-                        </div>
-                        <div class="card-footer text-body-secondary d-flex justify-content-between">
-                            <span>Всего прошивок доступно: <b>{{ block.firmware_count }}</b></span>
-                            <span>Используется на: <b>{{ block.cars_count }}</b> авто</span>
-                        </div>
                     </div>
-                {% endfor %}
+                    <div class="card-footer text-body-secondary d-flex justify-content-between">
+                        <span>Всего прошивок доступно: <b>{{ block.firmware_count }}</b></span>
+                        <span>Используется на: <b>{{ block.cars_count }}</b> авто</span>
+                    </div>
+                </div>
             </div>
         </div>
     </div>
@@ -125,19 +93,6 @@
                         <div class="mb-3">
                             <label for="name_input" class="form-label">Название контроллера</label>
                             <input type="text" class="form-control" id="name_input" name="name" value="" placeholder="qwerty1234" required>
-                        </div>
-                        <div class="mb-3">
-                            <label for="block-choice-input" class="form-label">Блок</label>
-                            <select id="block-choice-input" class="form-control js-choice" name="block_id">
-                            </select>
-                        </div>
-                        <div class="mb-3">
-                            <label for="block_name" class="form-label">Название блока</label>
-                            <input type="text" class="form-control" id="block_name" name="block_name" placeholder="qwerty1234">
-                        </div>
-                        <div class="mb-3">
-                            <label for="model_name" class="form-label">Модель блока</label>
-                            <input type="text" class="form-control" id="model_name" name="model_name" placeholder="qwerty1234">
                         </div>
                         <div class="mb-3">
                             <label for="versionInput" class="form-label">Версия прошивки</label>
@@ -224,7 +179,7 @@
         async function fetchBlocksAndUpdate() {
             try {
                 const response = await fetch(
-                    "{{ url_for('get_blocks_full') }}",
+                    "{{ url_for('get_single_block_full') }}?block_id={{ block.id }}",
                     {
                         method: 'GET',
                         headers: {
@@ -239,54 +194,47 @@
             }
         }
 
-        function updateBlockList(blocks) {
+        function updateBlockList(block) {
             const blockFirmwareList = document.getElementById('blockFirmwareList');
             blockFirmwareList.innerHTML = '';
 
-            blocks.forEach(block => {
-                const blockCard = document.createElement('div');
-                blockCard.classList.add('card');
+            const blockCard = document.createElement('div');
+            blockCard.classList.add('card');
+            blockCard.innerHTML = `
+            <div class="card-body" data-block-id="${block.id}">
+                <div class="card-title d-flex justify-content-between">
+                    <h4>${block.model_name} ${block.block_name}</h4>
+                    <button type="button" class="btn btn-danger delete-block-btn" data-bs-toggle="modal" data-bs-target="#deleteBlockModal" data-block-id="${block.id}">
+                        <i class="fa-solid fa-xmark"></i>
+                    </button>
+                </div>
 
-                blockCard.innerHTML = `
-                <div class="card-body" data-block-id="${block.id}">
-                    <div class="card-title d-flex justify-content-between">
-                        <a class="link-underline link-underline-opacity-0" href="${`{{ url_for('block_page', block_id="REPLACE_ID") }}`.replace('REPLACE_ID', block.id)}">
-                            <div class="d-flex gap-1">
-                                <h4>${block.model_name} ${block.block_name}</h4>
-                                <i class="fa-solid fa-arrow-up-right-from-square"></i>
-                            </div>
-                        </a>
-                        <button type="button" class="btn btn-danger delete-block-btn" data-bs-toggle="modal" data-bs-target="#deleteBlockModal" data-block-id="${block.id}">
-                            <i class="fa-solid fa-xmark"></i>
-                        </button>
-                    </div>
+                ${block.firmwares.map(firmware => `
+            <div class="accordion" id="firmwareAccordion-${firmware.id}">
+            <div class="accordion-item mb-2">
+            <h2 class="accordion-header">
+            <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#firmwareCollapse-${firmware.id}" aria-expanded="true" aria-controls="firmwareCollapse-${firmware.id}">
+            ${firmware.controller_name}
+            </button>
+            </h2>
+            <div id="firmwareCollapse-${firmware.id}" class="accordion-collapse collapse" data-bs-parent="#firmwareAccordion-${block.id }">
+            <ul class="list-group-flush">
+            <li class="list-group-item mt-4 mb-4">
+            <div class="fw-bold">Название контроллера: ${firmware.controller_name}</div>
+            <p class="">Версия прошивки: ${firmware.first_version.version}</p>
+            <p class="">Дата выпуска: ${firmware.first_version.release_date}</p>
+            <div class="btn-group" role="group" aria-label="Firmware page button group">
+            <a href="${`{{ url_for('firmware', firmware_id="REPLACE_ID") }}`.replace('REPLACE_ID', firmware.id)}" class="btn btn-outline-primary">Все версии</a>
+            <a href="${`{{ url_for('download_firmware', version_id="REPLACE_ID") }}`.replace('REPLACE_ID', firmware.first_version.id)}" class="btn btn-outline-success">Скачать</a>
+            <button class="btn btn-outline-danger delete-firmware-btn" data-bs-toggle="modal" data-bs-target="#deleteFirmwareModal" data-firmware-id="${firmware.id}">Удалить</button>
+            </div>
+            </li>
 
-                    ${block.firmwares.map(firmware => `
-                <div class="accordion" id="firmwareAccordion-${firmware.id}">
-                <div class="accordion-item mb-2">
-                <h2 class="accordion-header">
-                <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#firmwareCollapse-${firmware.id}" aria-expanded="true" aria-controls="firmwareCollapse-${firmware.id}">
-                ${firmware.controller_name}
-                </button>
-                </h2>
-                <div id="firmwareCollapse-${firmware.id}" class="accordion-collapse collapse" data-bs-parent="#firmwareAccordion-${block.id }">
-                <ul class="list-group-flush">
-                <li class="list-group-item mt-4 mb-4">
-                <div class="fw-bold">Название контроллера: ${firmware.controller_name}</div>
-                <p class="">Версия прошивки: ${firmware.first_version.version}</p>
-                <p class="">Дата выпуска: ${firmware.first_version.release_date}</p>
-                <div class="btn-group" role="group" aria-label="Firmware page button group">
-                <a href="${`{{ url_for('firmware', firmware_id="REPLACE_ID") }}`.replace('REPLACE_ID', firmware.id)}" class="btn btn-outline-primary">Все версии</a>
-                <a href="${`{{ url_for('download_firmware', version_id="REPLACE_ID") }}`.replace('REPLACE_ID', firmware.first_version.id)}" class="btn btn-outline-success">Скачать</a>
-                <button class="btn btn-outline-danger delete-firmware-btn" data-bs-toggle="modal" data-bs-target="#deleteFirmwareModal" data-firmware-id="${firmware.id}">Удалить</button>
-                </div>
-                </li>
-
-                </ul>
-                </div>
-                </div>
-                </div>
-                `).join('')}
+            </ul>
+            </div>
+            </div>
+            </div>
+            `).join('')}
 
                 </div>
                 <div class="card-footer text-body-secondary d-flex justify-content-between">
@@ -294,8 +242,7 @@
                     <span>Используется на: <b>${block.cars_count}</b> авто</span>
                 </div>
             `;
-                blockFirmwareList.appendChild(blockCard);
-            });
+            blockFirmwareList.appendChild(blockCard);
 
             document.querySelectorAll('.delete-block-btn').forEach(button => {
                 button.addEventListener('click', function() {
@@ -334,9 +281,7 @@
                 {version: formData.get('version'), release_date: formData.get('release_date')})
             )
             requestData.set('block', JSON.stringify({
-                id: formData.get('block_id'),
-                block_name: formData.get('block_name'),
-                model_name: formData.get('model_name'),
+                id: "{{ block.id }}",
             })
             )
             requestData.set('controller', JSON.stringify({
@@ -441,72 +386,6 @@
 
             document.getElementById('submitAddFirmwareBtn').addEventListener('click', modalSubmitEvent);
 
-            const block_choices_elements = document.querySelectorAll('.js-choice');
-
-            for (const block_choices_element of block_choices_elements) {
-                const choices = new Choices(block_choices_element, {
-                    choices: [],
-                    noChoicesText: 'Ничего не найдено',
-                    itemSelectText: "Нажмите, чтобы выбрать",
-                    noResultsText: 'Ничего не найдено',
-                    removeItemButton: true,
-                    searchPlaceholderValue: "Начните вводить название блока",
-                    classNames: {
-                        containerOuter: 'choices',
-                        containerInner: 'choices__inner',
-                        input: 'choices__input',
-                        inputCloned: 'choices__input--cloned',
-                        list: 'choices__list',
-                        listItems: 'choices__list--multiple',
-                        listSingle: 'choices__list--single',
-                        listDropdown: 'choices__list--dropdown',
-                        item: 'choices__item',
-                        itemSelectable: 'choices__item--selectable',
-                        itemDisabled: 'choices__item--disabled',
-                        itemOption: 'choices__item--choice',
-                        group: 'choices__group',
-                        groupHeading: 'choices__heading',
-                        button: 'choices__button',
-                        activeState: 'is-active',
-                        focusState: 'is-focused',
-                        openState: 'is-open',
-                        disabledState: 'is-disabled',
-                        highlightedState: 'is-highlighted',
-                        selectedState: 'is-selected',
-                        flippedState: 'is-flipped',
-                    },
-                    valueComparer: (a, b) => a.lower() === b.lower(),
-                    allowHTML: false,
-
-                });
-
-                async function searchHandler(event) {
-                    const query = event.detail.value;
-                    try {
-                        const response = await fetch("{{ url_for('get_blocks') }}" + `?query=${query}`);
-                        const data = await response.json();
-                        console.log('API Response:', data);
-                        if (data.length === 0) {
-                            return;
-                        }
-                        const new_choices = data.map(
-                            item => ({value: item.id, label: `${item.model_name} - ${item.block_name}`})
-                        );
-                        choices.setChoices(new_choices, 'value', 'label', true);
-                    } catch (error) {
-                        console.error('API Error:', error);
-                    }
-                }
-
-                let delayed_search = debounce(searchHandler, 500);
-
-                block_choices_element.addEventListener(
-                    'search',
-                    delayed_search,
-                    false,
-                );
-
-            }
 
             document.querySelectorAll('.delete-block-btn').forEach(button => {
                 button.addEventListener('click', function() {

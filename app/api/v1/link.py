@@ -1,9 +1,21 @@
-from fastapi import APIRouter, Depends
+import json
+import logging
 
-from app.db.neo4j.links import LinkDispatcher
-from app.db.neo4j.session import build_dispatcher_dependency
+from fastapi import APIRouter, Depends, Form, Request
+
+from app.db.neo4j.links.dispatcher import LinkDispatcher
+from app.db.neo4j.links.storage import LinkStorage
+from app.db.neo4j.session import build_dispatcher_dependency, build_storage_dependency
+from app.dependencies.auth import get_admin_user
+from app.models.block import ModalBlockCreateModel
+from app.models.link import CarBlockLinkModel
+from app.models.response import BaseAPIResponse
+from app.models.user import User
 
 router = APIRouter(prefix="/link", tags=["link"])
+
+
+logger = logging.getLogger(__name__)
 
 
 @router.post("/firmware_block")
@@ -18,10 +30,28 @@ async def link_firmware_to_block(
     )
 
 
-@router.post("/car_block")
-async def link_car(
+@router.delete("/car_block", name="unlink_block_to_car")
+async def unlink_car_to_block(
     car_id: str,
     block_id: str,
     dispatcher: LinkDispatcher = Depends(build_dispatcher_dependency(LinkDispatcher)),
-) -> None:
-    return await dispatcher.link_car_to_block(car_id=car_id, block_id=block_id)
+) -> int:
+    try:
+        return await dispatcher.unlink_block_to_car(car_id=car_id, block_id=block_id)
+    except Exception as e:
+        logger.error("Error unlinking car from block: %s", e, exc_info=e)
+        return 0
+
+
+@router.post(
+    "/car_block", name="link_block_to_car", dependencies=[Depends(get_admin_user)]
+)
+async def link_car_to_block(
+    data: CarBlockLinkModel,
+    storage: LinkStorage = Depends(build_storage_dependency(LinkStorage)),
+) -> BaseAPIResponse:
+    try:
+        return await storage.link_car_block_full(car_id=data.car_id, block=data.block)
+    except Exception as e:
+        logger.error("Error linking car to block: %s", e, exc_info=e)
+        return BaseAPIResponse(success=False, message="Произошла серверная ошибка")

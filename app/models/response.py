@@ -1,6 +1,7 @@
 from pydantic import BaseModel, model_validator
 
 from app.models.block import BlockDataModel
+from app.models.car import CarDataModel
 from app.models.controller import (
     BlockControllerResponseModel,
     ControllerDataModel,
@@ -19,6 +20,18 @@ class BlockControllersResponseModel(BlockDataModel):
     def set_additional_info(cls, values):
         if values.firmware_count is None:
             values.firmware_count = len(values.firmwares)
+        return values
+
+
+class CarBlockResponseModel(CarDataModel):
+    blocks: list[BlockDataModel]
+    blocks_count: int = None
+
+    @model_validator(mode="after")
+    @classmethod
+    def set_additional_info(cls, values):
+        if values.blocks_count is None:
+            values.blocks_count = len(values.blocks)
         return values
 
 

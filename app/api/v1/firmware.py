@@ -3,8 +3,8 @@ import json
 from fastapi import APIRouter, Depends, UploadFile
 from fastapi.params import File, Form
 
-from app.db.neo4j.controller import ControllerStorage
-from app.db.neo4j.links import LinkStorage
+from app.db.neo4j.controller.storage import ControllerStorage
+from app.db.neo4j.links.storage import LinkStorage
 from app.db.neo4j.session import build_storage_dependency
 from app.models.block import ModalBlockCreateModel
 from app.models.controller import (
