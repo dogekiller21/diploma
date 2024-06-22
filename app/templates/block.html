@@ -30,7 +30,7 @@
         <div class="card-header d-flex justify-content-between">
             <span class="pt-1"></span>
             {% if user.scope == 'admin' %}
-                <button type="button" class="btn btn-sm btn-success" data-bs-toggle="modal" data-bs-target="#addFirmwareModal">
+                <button type="button" class="btn btn-sm btn-outline-success" data-bs-toggle="modal" data-bs-target="#addFirmwareModal">
                     <i class="fa-solid fa-plus"></i>
                 </button>
             {% endif %}
@@ -43,7 +43,7 @@
                         <div class="card-title d-flex justify-content-between">
                             <h4>{{ block.model_name }} {{ block.block_name }}</h4>
                             {% if user.scope == 'admin' %}
-                                <button type="button" class="btn btn-danger delete-block-btn" data-bs-toggle="modal" data-bs-target="#deleteBlockModal" data-block-id="{{ block.id }}">
+                                <button type="button" class="btn btn-outline-danger delete-block-btn" data-bs-toggle="modal" data-bs-target="#deleteBlockModal" data-block-id="{{ block.id }}">
                                     <i class="fa-solid fa-xmark"></i>
                                 </button>
                             {% endif %}
@@ -212,7 +212,7 @@
             <div class="card-body" data-block-id="${block.id}">
                 <div class="card-title d-flex justify-content-between">
                     <h4>${block.model_name} ${block.block_name}</h4>
-                    <button type="button" class="btn btn-danger delete-block-btn" data-bs-toggle="modal" data-bs-target="#deleteBlockModal" data-block-id="${block.id}">
+                    <button type="button" class="btn btn-outline-danger delete-block-btn" data-bs-toggle="modal" data-bs-target="#deleteBlockModal" data-block-id="${block.id}">
                         <i class="fa-solid fa-xmark"></i>
                     </button>
                 </div>

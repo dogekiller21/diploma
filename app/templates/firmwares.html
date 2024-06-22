@@ -55,7 +55,7 @@
         <div class="card-header d-flex justify-content-between">
             <span class="pt-1">Список</span>
             {% if user.scope == 'admin' %}
-                <button type="button" class="btn btn-sm btn-success" data-bs-toggle="modal" data-bs-target="#addFirmwareModal">
+                <button type="button" class="btn btn-sm btn-outline-success" data-bs-toggle="modal" data-bs-target="#addFirmwareModal">
                     <i class="fa-solid fa-plus"></i>
                 </button>
             {% endif %}
@@ -74,7 +74,7 @@
                                     </div>
                                 </a>
                                 {% if user.scope == 'admin' %}
-                                    <button type="button" class="btn btn-danger delete-block-btn" data-bs-toggle="modal" data-bs-target="#deleteBlockModal" data-block-id="{{ block.id }}">
+                                    <button type="button" class="btn btn-outline-danger delete-block-btn" data-bs-toggle="modal" data-bs-target="#deleteBlockModal" data-block-id="{{ block.id }}">
                                         <i class="fa-solid fa-xmark"></i>
                                     </button>
                                 {% endif %}
@@ -266,7 +266,7 @@
                                 <i class="fa-solid fa-arrow-up-right-from-square"></i>
                             </div>
                         </a>
-                        <button type="button" class="btn btn-danger delete-block-btn" data-bs-toggle="modal" data-bs-target="#deleteBlockModal" data-block-id="${block.id}">
+                        <button type="button" class="btn btn-outline-danger delete-block-btn" data-bs-toggle="modal" data-bs-target="#deleteBlockModal" data-block-id="${block.id}">
                             <i class="fa-solid fa-xmark"></i>
                         </button>
                     </div>

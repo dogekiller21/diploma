@@ -55,7 +55,7 @@
         <div class="card-header d-flex justify-content-between">
             <span class="pt-1">Список</span>
             {% if user.scope == 'admin' %}
-                <button type="button" class="btn btn-sm btn-success" data-bs-toggle="modal" data-bs-target="#addCarModal">
+                <button type="button" class="btn btn-sm btn-outline-success" data-bs-toggle="modal" data-bs-target="#addCarModal">
                     <i class="fa-solid fa-plus"></i>
                 </button>
             {% endif %}
@@ -70,10 +70,10 @@
                                 <h4>{{car.brand}} {{car.model}} {{car.numberplate}}</h4>
                                 {% if user.scope == 'admin' %}
                                     <div class="btn-group" role="group" aria-label="Car main button group">
-                                        <button type="button" class="btn btn-primary link-car-block-btn" data-bs-toggle="modal" data-bs-target="#addCarBlockModal" data-car-id="{{ car.id }}">
+                                        <button type="button" class="btn btn-outline-primary link-car-block-btn" data-bs-toggle="modal" data-bs-target="#addCarBlockModal" data-car-id="{{ car.id }}">
                                             <i class="fa-solid fa-chain"></i>
                                         </button>
-                                        <button type="button" class="btn btn-danger delete-car-btn" data-bs-toggle="modal" data-bs-target="#deleteCarModal" data-car-id="{{ car.id }}">
+                                        <button type="button" class="btn btn-outline-danger delete-car-btn" data-bs-toggle="modal" data-bs-target="#deleteCarModal" data-car-id="{{ car.id }}">
                                             <i class="fa-solid fa-xmark"></i>
                                         </button>
                                     </div>
@@ -288,10 +288,10 @@
                     <div class="card-title d-flex justify-content-between">
                         <h4>${car.brand} ${car.model} ${car.numberplate}</h4>
                         <div class="btn-group" role="group" aria-label="Car main button group">
-                            <button type="button" class="btn btn-primary link-car-block-btn" data-bs-toggle="modal" data-bs-target="#addCarBlockModal" data-car-id="${car.id}">
+                            <button type="button" class="btn btn-outline-primary link-car-block-btn" data-bs-toggle="modal" data-bs-target="#addCarBlockModal" data-car-id="${car.id}">
                                 <i class="fa-solid fa-chain"></i>
                             </button>
-                            <button type="button" class="btn btn-danger delete-car-btn" data-bs-toggle="modal" data-bs-target="#deleteCarModal" data-car-id="${car.id}">
+                            <button type="button" class="btn btn-outline-danger delete-car-btn" data-bs-toggle="modal" data-bs-target="#deleteCarModal" data-car-id="${car.id}">
                                 <i class="fa-solid fa-xmark"></i>
                             </button>
                         </div>
