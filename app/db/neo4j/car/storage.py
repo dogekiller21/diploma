@@ -99,32 +99,33 @@ class CarStorage(BaseStorage):
             car_id = None
 
         query = """
-        MATCH (car:Car)
-        WHERE ($car_id IS NULL OR car.id = $car_id)
-        OPTIONAL MATCH (car)-[:LINKED_CAR]->(bb:Block)
-        OPTIONAL MATCH (cc:Controller)-[:LINKED_BLOCK]->(bb)
-        WITH car, bb, COUNT(DISTINCT cc) as firmwares_count
-        WITH car, bb, 
-             CASE 
-                 WHEN bb IS NOT NULL THEN {
-                     id: bb.id,
-                     block_name: bb.block_name,
-                     model_name: bb.model_name,
-                     firmwares_count: firmwares_count
-                 }
-                 ELSE NULL
-             END AS block_info
-        WITH car, COLLECT(DISTINCT block_info) AS blocks
-        WHERE ($block_id IS NULL OR any(b in blocks WHERE b.id = $block_id))
-        RETURN
-            car.id AS id,
-            car.numberplate AS numberplate,
-            car.brand AS brand,
-            car.model AS model,
-            car.info AS info,
-            [b IN blocks WHERE b IS NOT NULL] AS blocks
-        SKIP $offset
-        LIMIT $limit
+MATCH (car:Car)
+WHERE ($car_id IS NULL OR car.id = $car_id)
+OPTIONAL MATCH (car)-[:LINKED_CAR]->(bb:Block)
+OPTIONAL MATCH (cc:Controller)-[:LINKED_BLOCK]->(bb)
+WITH car, bb, cc
+WITH car, bb, COUNT(DISTINCT cc) as firmwares_count
+WITH car, 
+     CASE 
+         WHEN bb IS NOT NULL THEN {
+             id: bb.id,
+             block_name: bb.block_name,
+             model_name: bb.model_name,
+             firmwares_count: firmwares_count
+         }
+         ELSE NULL
+     END AS block_info
+WITH car, COLLECT(DISTINCT block_info) AS blocks
+WHERE ($block_id IS NULL OR any(b in blocks WHERE b.id = $block_id))
+RETURN
+    car.id AS id,
+    car.numberplate AS numberplate,
+    car.brand AS brand,
+    car.model AS model,
+    car.info AS info,
+    [b IN blocks WHERE b IS NOT NULL] AS blocks
+SKIP $offset
+LIMIT $limit
         """
         result = await self.make_request(
             query=query, limit=limit, offset=offset, block_id=block_id, car_id=car_id
@@ -132,6 +133,7 @@ class CarStorage(BaseStorage):
         data = await result.data()
         if not data:
             return []
+        print(data)
         return [CarBlockResponseModel.model_validate(item) for item in data]
 
     async def search_cars(

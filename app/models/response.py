@@ -1,4 +1,4 @@
-from pydantic import BaseModel, model_validator
+from pydantic import BaseModel, ConfigDict, model_validator
 
 from app.models.block import BlockDataModel
 from app.models.car import CarDataModel
@@ -23,8 +23,17 @@ class BlockControllersResponseModel(BlockDataModel):
         return values
 
 
+class BlockResponseModel(BaseModel):
+    id: str
+    block_name: str
+    model_name: str
+    firmwares_count: int
+
+    model_config = ConfigDict(protected_namespaces=())
+
+
 class CarBlockResponseModel(CarDataModel):
-    blocks: list[BlockDataModel]
+    blocks: list[BlockResponseModel]
     blocks_count: int = None
 
     @model_validator(mode="after")
