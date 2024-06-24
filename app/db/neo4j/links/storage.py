@@ -62,6 +62,21 @@ class LinkStorage(BaseStorage):
         block: ModalBlockCreateModel,
         version: VersionCreateModel,
     ) -> FirmwareAPIResponse:
+        if not block.id and not (block.block_name and block.model_name):
+            return FirmwareAPIResponse(
+                success=False,
+                message="Блок не может быть пустым, требуется ввести имя и модель или выбрать существующий блок",
+            )
+        if not controller.controller_name:
+            return FirmwareAPIResponse(
+                success=False,
+                message="Требуется ввести название контроллера",
+            )
+        if not version.version or not version.release_date or not version.data:
+            return FirmwareAPIResponse(
+                success=False,
+                message="Требуется ввести данные релиза (версия, дата релиза и файл прошивки)",
+            )
         async with await self.session.begin_transaction() as tx:
             try:
                 controller_storage = ControllerStorage(session=tx)
