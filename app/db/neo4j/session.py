@@ -15,7 +15,6 @@ async def get_db_session():
     try:
         yield session
     finally:
-        print("Closing session")
         await session.close()
 
 
